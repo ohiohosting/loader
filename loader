@@ -201,9 +201,7 @@ spawn(function()
                 local future = hrp.Position + (hrp.Velocity * (getgenv().prediction or 0.12))
                 mouse.Hit = CFrame.new(future)
                 local tool = LocalPlayer.Backpack:FindFirstChildOfClass("Tool") or LocalPlayer.Character:FindFirstChildOfClass("Tool")
-                if tool then
-                    tool:Activate()
-                end
+                if tool then tool:Activate() end
                 task.wait(getgenv().click_duration or 0.001)
             end
         end
@@ -290,6 +288,7 @@ local function makeToggle(text, y, key)
     end)
     return btn
 end
+
 makeToggle("Bypass", 10, "enableBypass")
 makeToggle("No Recoil", 50, "enableNoRecoil")
 makeToggle("Bullet TP", 90, "enableBulletTP")
@@ -319,5 +318,6 @@ local function makeKeybind(label, y, key)
         end
     end)
 end
+
 makeKeybind("Bullet Key", 210, "bulletKey")
 makeKeybind("Trigger Key", 250, "triggerKey")
