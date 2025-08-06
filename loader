@@ -1,398 +1,1105 @@
-getgenv().SharpSSilent = {
-    Enabled = true,  -- [Enable or disable the silent aim script]
-    Keybind = "Q",  -- [Keybind to toggle the silent aim]
-    ToggleNotification = true,  -- [Show a notification when toggling]
-    WallCheck = true,  -- [Check for walls between player and target]
-
-
-    Prediction = {
-        Horizontal = 0.1215,  -- [Horizontal prediction adjustment]
-        Vertical = 0.1215,  -- [Vertical prediction adjustment]
-        Resolver = false,  -- [Enable or disable resolver to correct aim]
-        Autopredvertical = true,
-        AutopredHorizontal = true,
-
+getgenv().Private = {
+    ["Mode"] = "User", -- User or Dev. keep it on user if you arent modifying.
+    ["Nil_Recoil"] = false, -- Removes the recoil asset.
+    ["Intro"] = true,
+    --
+    ["Keybinds"] = {
+        Camera_Lock = "C",
+        Redirection = {false, "K"} -- Keybind to disable / enable redirection
     },
-    Targeting = {
-        TargetMode = "Closest",  -- [Mode of targeting: "Closest" or "HitPart"]
-        ClosestHitPoint = false,  -- [Use closest hit point on parts if true]
-        HitPart = "HumanoidRootPart",  -- ["Head", "Torso", "HumanoidRootPart", "LeftArm", "RightArm", "LeftLeg", "RightLeg", "LowerRightLeg", "LowerLeftLeg"]
-        UntargetOnFall = true,  -- [Untarget player if they fall]
-        FallThreshold = 0.5  -- [Time after which to untarget falling players (in seconds)]
-    },
-    Humanization = {
-        Enabled = false,  -- [Enable humanization for more legit movement]
-        TargetSwitchDuration = 0.5,  -- [Delay between target switches (in seconds)]
-        HumanizationFactor = 0.5  -- [Adjust how legit the movement looks, range from 0 to 1]
-    },
-    FovSettings = {
-        FovVisible = true,  -- [Show the Field of View (FOV) circle]
-        FovRadius = 160,  -- [Radius of the FOV circle]
-        FovThickness = 2,  -- [Thickness of the FOV circle line]
-        FovTransparency = 0.2,  -- [Transparency of the FOV circle]
-        FovColor = Color3.fromRGB(0, 162, 232),  -- [Color of the FOV circle]
-        Filled = false,  -- [Fill the FOV circle]
-        FillTransparency = 0.3,  -- [Transparency of the filled FOV circle]
-        FovShape = "Circle",  -- [Shape of the FOV circle: "Circle", "Square", "Triangle"]
-        FovBorderColor = Color3.fromRGB(0, 32, 96),  -- [Border color of the FOV circle]
-        FovBorderThickness = 2,  -- [Thickness of the FOV circle border]
-        DynamicFOV = {
-            Enabled = false,  -- [Enable dynamic FOV adjustment]
-            Type = "Speed",  -- [Type of dynamic adjustment: "Speed" or "Health"]
-            MinFOV = 30,  -- [Minimum FOV value]
-            MaxFOV = 50,  -- [Maximum FOV value]
-            SpeedThreshold = 16,  -- [Speed at which FOV reaches MaxFOV]
-            HealthThreshold = 50,  -- [Health percentage at which FOV reaches MaxFOV]
+    --
+    ["Redirection"] = {
+        ["Enabled"] = true,
+        ["Entities"] = {type = "Player", npc_folder = "NPC"}, -- Player, NPC, Both
+        ["Resolving"] = {Magnitude = 70},
+        ["Velocity"] = { -- Use custom velocity for the target. Could be buggy with resolver but idk
+            false, 
+            Vector3.new(0.36, 0.21, 0.34)
+        },
+
+        ["Part"] = { -- X (Left, Right), Y (Up, Down)
+            Horizontal = "HumanoidRootPart", 
+            Vertical = {false, "Head"},
+            ["Nearest"] = {
+                Enabled = false,
+                Type = "Part", -- Part, Point
+
+                Point_Method = "WS", -- WS, Transform
+                Point_Percentage = 0.026
+            },
+            ["Custom"] = {
+                ["Enabled"] = true,
+                ["Type"] = "Parts",
+                ["Parts"] = {
+                    "Head",
+                    "HumanoidRootPart",
+                    "UpperTorso"
+                    "RightHand"
+                    "LeftFoot"
+                    "RightFoot"
+                }
+            }
+        },
+        ["Prediction"] = {
+            Enabled = true,
+            ["Set"] = {
+                Horizontal = 0.12411324, 
+                Vertical = {false, 0.124031941},
+                Z_Axis = {false, 0.11105}
+            }
+        },
+        ["FOV"] = {
+            ["Settings"] = {
+                Use_FOV = true,
+                Multiplied = {false, 15}, -- if you wanna multiply your fov by something because people do that.
+                Indicator = true -- Makes the fov Green if there is a target. And red if there isnt.
+            },
+            ["Positioning"] = {
+                Method = "Middle", -- Middle, Mouse_Follow, Target_Follow, Offset
+                Offset = {0, 0}
+            },
+            ["Visual"] = {
+                Visible = true,
+                Radius = 50, 
+                Transparency = 0,
+                Color = Color3.new(255, 255, 255),
+                Filled = false,
+            }
+        },
+        ["PartPrediction"] = { -- X, Y, Z
+            ["Enabled"] = false,
+    
+            -- Head
+            ["Head"] = {0.12, 0.13, 0.12},
+    
+            -- Torso
+            ["UpperTorso"] = {0.12, 0.13, 0.12},
+            ["HumanoidRootPart"] = {0.12, 0.13, 0.12},
+            ["LowerTorso"] = {0.12, 0.13, 0.12},
+    
+            -- Arms
+            ["RightUpperArm"] = {0.12, 0.13, 0.12},
+            ["RightLowerArm"] = {0.12, 0.13, 0.12},
+            ["RightHand"] = {0.12, 0.13, 0.12},
+    
+            ["LeftUpperArm"] = {0.12, 0.13, 0.12},
+            ["LeftLowerArm"] = {0.12, 0.13, 0.12},
+            ["LeftHand"] = {0.12, 0.13, 0.12},
+    
+            -- Legs
+            ["RightUpperLeg"] = {0.12, 0.13, 0.12},
+            ["RightLowerLeg"] = {0.12, 0.13, 0.12},
+            ["RightFoot"] = {0.12, 0.13, 0.12},
+    
+            ["LeftUpperLeg"] = {0.12, 0.13, 0.12},
+            ["LeftLowerLeg"] = {0.12, 0.13, 0.12},
+            ["LeftFoot"] = {0.12, 0.13, 0.12}
+        },
+        ["Hit_Randomizer"] = {
+            Enabled = false, 
+            Randomization = 0.3
+        },
+        ["Predicted_Pos"] = {
+            Enabled = true,
+            Type = "Realistic", -- Unrealistic, Realistic (Very important)
+            Multiplier = 0,
+            Strength = 3
+        },
+        ["AntiGroundShots"] = {
+            Enabled = true,
+            Activation = 0.23
+        },
+        ["Checks"] = {
+            Dead = true,
+            Grabbed = true,
+            Health = {false, 10},
+            Wall = true, 
+            Visible = true,
+            Force_Field = false
+        },
+        ["Autoprediction"] = { -- current sets are decent.
+            Enabled = true,
+            P200 = {0.1865, 0.1725562},
+            P190 = {0.1848, 0.16657},
+            P180 = {0.1522755695, 0.165},
+            P170 = {0.1663, 0.16},
+            P160 = {0.1574, 0.15672},
+            P150 = {0.1555, 0.1535},
+            P140 = {0.141241, 0.1465582},
+            P130 = {0.140182, 0.145},
+            P120 = {0.138286, 0.13765},
+            P110 = {0.1337426, 0.135},
+            P100 = {0.135715, 0.132156},
+            P90 = {0.134981, 0.13286},
+            P80 = {0.1270182, 0.132},
+            P70 = {0.121984, 0.12855},
+            P60 = {0.1256826, 0.124862},
+            P50 = {0.12559, 0.127668},
+            P40 = {0.12, 0.12031941}
         }
     },
-    HitPoint = {
-        ShowHitPoint = false,  -- [Show hit point marker]
-        HitPointRadius = 4,  -- [Radius of the hit point marker]
-        HitPointThickness = 2,  -- [Thickness of the hit point marker]
-        HitPointColor = Color3.fromRGB(0, 162, 232),  -- [Color of the hit point marker]
-        HitPointTransparency = 1,  -- [Transparency of the hit point marker]
+    ["Camera"] = {
+        ["Enabled"] = true,
+        ["Entities"] = {type = "Player", npc_folder = "NPC"}, -- Player, NPC, Both
+        ["Resolving"] = {Magnitude = 70},
+        ["Velocity"] = { -- Use custom velocity for the target. Could be buggy with resolver but idk
+            false, 
+            Vector3.new(0.36, 0.21, 0.34)
+        },
+
+        ["Part"] = {
+            Horizontal = "HumanoidRootPart", 
+            Vertical = {false, "Head"},
+            ["Nearest"] = {
+                Enabled = false,
+                Type = "Part", -- Part, Point
+
+                Point_Method = "WS", -- WS, Transform
+                Point_Percentage = 0.026
+            },
+            ["Custom"] = {
+                ["Enabled"] = false,
+                ["Type"] = "Parts",
+                ["Parts"] = {
+                    "Head",
+                    "HumanoidRootPart",
+                    "UpperTorso"
+                }
+            }
+        },
+        ["Prediction"] = {
+            Enabled = true,
+            ["Set"] = { 
+                Horizontal = 0.12855, 
+                Vertical = {false, 0.13},
+                Z_Axis = {false, 0.13}
+            }
+        },
+        ["Smoothness"] = {
+            Enabled = true,
+            Type = "Smoothness", -- Smoothness
+            Intensity = 10,
+            ["Smoothing"] = {
+                Horizontal = 0.85, 
+                Vertical = {false, 0.9}
+            }
+        },
+        ["Offset"] = {
+            Enabled = false,
+            ["Set"] = {
+                Horizontal = {0, 0, 0},
+                Vertical = {false, 0, 0, 0}
+            }
+        },
+        ["Checks"] = {
+            Dead = false,
+            Grabbed = false,
+            ThirdPerson_Shiftlock = false, -- if you're in 3rd person with shiftlock then it unlocks.
+            Health = {false, 10},
+            Wall = false, 
+            Visible = true,
+            ToolOut = false,
+            Force_Field = false
+        },
+        ["Autoprediction"] = { -- current sets are decent
+            Enabled = false,
+            P200 = {0.168728162, 0.1725562},
+            P190 = {0.1658625, 0.16657},
+            P180 = {0.16, 0.165},
+            P170 = {0.157865, 0.16},
+            P160 = {0.15516732, 0.15672},
+            P150 = {0.15175864, 0.1535},
+            P140 = {0.14625, 0.1465582},
+            P130 = {0.14, 0.145},
+            P120 = {0.1365, 0.13765},
+            P110 = {0.132556, 0.135},
+            P100 = {0.130340, 0.132156},
+            P90 = {0.13255, 0.13286},
+            P80 = {0.13, 0.132},
+            P70 = {0.128383, 0.12855},
+            P60 = {0.124031941, 0.124862},
+            P50 = {0.1259910, 0.127668},
+            P40 = {0.12031941, 0.12031941}
+        }
     },
-    Watermark = {
-        Enabled = true,  -- [Enable or disable the watermark]
-        Sound = true,  -- [Enable or disable the sound]
-        Music = false,  -- [Enable or disable the music]
+    ["Mouse_TP"] = { -- Synced with silent aim target
+        Enabled = false,
+        UsePrediction = false,
+
+        Method = "Health", -- Health, Jumping
+        Part = "HumanoidRootPart",
+
+        Prediction = 0.12,
+        Health_Value = 100,
+        Jump_Wait = 0.8 -- How long it waits before flicking to the jumping position
+    },
+    ["Bullet_Tracers"] = {
+        Enabled = false,
+        ["Visual"] = {
+            Material = "ForceField",
+            Color = Color3.new(1, 5, 8),
+            Texture_ID = "9150663556",
+            Transparency = 0.5,
+            ["Color_Sequence"] = {
+                Enabled = false,
+                Color3.new(255, 255, 255),
+                Color3.new(0, 0, 0)
+            }
+        }
     }
 }
 
--- [+] Fixed Script
--- [+] Fixed FOV
--- [+] Fixed Untargetting inside FOV (probably)
--- [+] Enable / Disabled Notification Toggle
--- [+] * Prediction
--- [+] Horizontal
--- [+] Vertical
--- [+] Added Prediction Adjustment
--- [+] * Targeting
--- [+] TargetMode ["Closest" & "HitPart"]
--- [+] UntargetOnFall
--- [+] HitPart ["Head", "Torso", "HumanoidRootPart", "LeftArm", "RightArm", "LeftLeg", "RightLeg", "LowerRightLeg", "LowerLeftLeg"]
--- [+] * Added Dynamic FOV
--- [+] BasedOn ["Health" & "Speed"]
--- [+] MinFovRadius
--- [+] MaxFovRadius
--- [+] SpeedThreshold
--- [+] HealthThreshold
--- [+] * Humanization
--- [+] HumanizationFactor
--- [+] TargetSwitchDuration
--- [+] * Watermark
--- [+] Enable / Disable
--- [+] Sound
--- [+] Music
--- [+] Fixed ATON OF SHIT while making this
---[[ Disclaimer: 
-if your getting banned using Sharp Solara Silent, while da hood updated and,
-its not my fault or anyones fault in my team your using Cheats at your OWN RISK,
-so be careful and check for Da Hood updates before using it.
---]]
---[[ Copying: 
-please dont just copy anything without credits, if you wanna make a better remake,
-or anything atleast give me credits and dont remove the watermark, read the README file.
---]]
+local Private = getgenv().Private
+local game = game
 
--- // Services // -- @canyoulovemeback on discord / supercoolboi34
-local G = game
-local Run_Service = G:GetService("RunService")
-local Players = G:GetService("Players")
-local UserInputService = G:GetService("UserInputService")
-local Local_Player = Players.LocalPlayer
-local Mouse = Local_Player:GetMouse()
-local Current_Camera = G:GetService("Workspace").CurrentCamera
-local Replicated_Storage = G:GetService("ReplicatedStorage")
-local StarterGui = G:GetService("StarterGui")
-local Workspace = G:GetService("Workspace")
-local SoundService = G:GetService("SoundService")
+repeat
+    wait()
+until game.Players.LocalPlayer.Character:FindFirstChild("FULLY_LOADED_CHAR")
 
--- // Variables // -- @canyoulovemeback on discord / supercoolboi34
+local Silent_Target = nil
+local AAVSTATE = true
+
+-- Overall Globals
+local workspace = game:GetService("Workspace")
+local CC = workspace.CurrentCamera
+local Mouse = game.Players.LocalPlayer:GetMouse()
+local UserInputService = game:GetService("UserInputService")
+local ScriptContext = game:GetService("ScriptContext")
+local RayParam = RaycastParams.new()
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local LocalPlayer = game.Players.LocalPlayer
+local Camera2 = workspace:FindFirstChild("Camera")
+local JumpState = Silent_Target and Silent_Target.Character:GetState() == Enum.HumanoidStateType.Jumping
+
+local Part2
+function SilentVelocityFunction()
+    if Private.Redirection.Velocity[1] and Silent_Target and Part2 then
+        Silent_Target.Character[Part2].Velocity = Private.Redirection.Velocity[2] * 2
+    elseif not Private.Redirection.Velocity[1] and Part2 and Silent_Target then
+        Silent_Target.Character[Part2].Velocity = Silent_Target.Character[Part2].Velocity
+    end
+end
+
+local SilentTargetVelocity = SilentVelocityFunction()
+
+-- Aimbot Globals
 local Target = nil
-local V2 = Vector2.new
-local Fov = Drawing.new("Circle")
-local lastToolUse = 0
-local HitPoint = Drawing.new("Circle")
-local FovParts = {}  -- Store the parts for square and triangle FOV
-local wallCheckFrequency = 10  -- Perform wall check every 10 frames
-local frameCounter = 0
-local lastSwitchTime = tick()
-local fallStartTime = {}
+local IsTargetting = false
+local Prediction2
+local Prediction
+local Part
+local Smoothness
+local Pee
+local CamJumpState = Target and Target.Character:GetState() == Enum.HumanoidStateType.Jumping
 
--- // Game Load Check // -- @canyoulovemeback on discord / supercoolboi34
-if not game:IsLoaded() then
-    game.Loaded:Wait()
-end
-
--- // Clear FOV Parts // -- @canyoulovemeback on discord / supercoolboi34
-local function clearFovParts()
-    for _, part in pairs(FovParts) do
-        part:Remove()
-    end
-    FovParts = {}
-end
-
--- // Update FOV Function // -- @canyoulovemeback on discord / supercoolboi34
-local function updateFov()
-    local settings = getgenv().SharpSSilent.FovSettings
-    clearFovParts()
-    if settings.DynamicFOV.Enabled then
-        local dynamicSettings = settings.DynamicFOV
-        if dynamicSettings.Type == "Speed" and Local_Player.Character and Local_Player.Character:FindFirstChild("HumanoidRootPart") then
-            local speed = Local_Player.Character.HumanoidRootPart.Velocity.Magnitude
-            settings.FovRadius = math.clamp(dynamicSettings.MinFOV + (speed / dynamicSettings.SpeedThreshold) * (dynamicSettings.MaxFOV - dynamicSettings.MinFOV), dynamicSettings.MinFOV, dynamicSettings.MaxFOV)
-        elseif dynamicSettings.Type == "Health" and Local_Player.Character and Local_Player.Character:FindFirstChild("Humanoid") then
-            local healthPercent = (Local_Player.Character.Humanoid.Health / Local_Player.Character.Humanoid.MaxHealth) * 100
-            settings.FovRadius = math.clamp(dynamicSettings.MinFOV + ((100 - healthPercent) / dynamicSettings.HealthThreshold) * (dynamicSettings.MaxFOV - dynamicSettings.MinFOV), dynamicSettings.MinFOV, dynamicSettings.MaxFOV)
-        end
-    end
-
-    if settings.FovShape == "Square" then
-        local halfSize = settings.FovRadius / 2
-        local corners = {
-            V2(Mouse.X - halfSize, Mouse.Y - halfSize),
-            V2(Mouse.X + halfSize, Mouse.Y - halfSize),
-            V2(Mouse.X + halfSize, Mouse.Y + halfSize),
-            V2(Mouse.X - halfSize, Mouse.Y + halfSize)
-        }
-        for i = 1, 4 do
-            local line = Drawing.new("Line")
-            line.Visible = settings.FovVisible
-            line.From = corners[i]
-            line.To = corners[i % 4 + 1]
-            line.Color = settings.FovColor
-            line.Thickness = settings.FovThickness
-            line.Transparency = settings.FovTransparency
-            table.insert(FovParts, line)
-        end
-    elseif settings.FovShape == "Triangle" then
-        local points = {
-            V2(Mouse.X, Mouse.Y - settings.FovRadius),
-            V2(Mouse.X + settings.FovRadius * math.sin(math.rad(60)), Mouse.Y + settings.FovRadius * math.cos(math.rad(60))),
-            V2(Mouse.X - settings.FovRadius * math.sin(math.rad(60)), Mouse.Y + settings.FovRadius * math.cos(math.rad(60)))
-        }
-        for i = 1, 3 do
-            local line = Drawing.new("Line")
-            line.Visible = settings.FovVisible
-            line.From = points[i]
-            line.To = points[i % 3 + 1]
-            line.Color = settings.FovColor
-            line.Thickness = settings.FovThickness
-            line.Transparency = settings.FovTransparency
-            table.insert(FovParts, line)
-        end
-    else 
-        Fov.Visible = settings.FovVisible
-        Fov.Radius = settings.FovRadius
-        Fov.Position = V2(Mouse.X, Mouse.Y + (G:GetService("GuiService"):GetGuiInset().Y))
-        Fov.Color = settings.FovColor
-        Fov.Thickness = settings.FovThickness
-        Fov.Transparency = settings.FovTransparency
-        Fov.Filled = settings.Filled
-        if settings.Filled then
-            Fov.Transparency = settings.FillTransparency
-        end
+function CameraVelocityFunction()
+    if Private.Camera.Velocity[1] and Target and Part then
+        Target.Character[Part].Velocity = Private.Camera.Velocity * 2
+    elseif not Private.Camera.Velocity[1] and Part and Target then
+        Target.Character[Part].Velocity = Target.Character[Part].Velocity
     end
 end
 
--- // Notification Function // -- @canyoulovemeback on discord / supercoolboi34
-local function sendNotification(title, text, icon)
-    if not getgenv().SharpSSilent.ToggleNotification then
-        StarterGui:SetCore("SendNotification", {
-            Title = title,
-            Text = text,
-            Icon = icon,
-            Duration = 5
-        })
-    end
+local CameraTargetVelocity = CameraVelocityFunction()
+
+-- Bullet Tracer Globals
+local Last_Ammo = nil
+local Children_Added = 0
+local Current_Gun = nil
+local Child_Added_Connec
+local Ammo_Changed_Connec = nil
+
+-- drawing lib
+local DrawingLib = {}
+
+local BaseDrawingProperties = setmetatable({
+	Visible = false,
+	Color = Color3.new(),
+	Transparency = 0,
+	Remove = function()
+	end
+}, {
+	__add = function(tbl1, tbl2)
+		local new = {}
+		for i, v in next, tbl1 do
+			new[i] = v
+		end
+		for i, v in next, tbl2 do
+			new[i] = v
+		end
+		return new
+	end
+})
+
+local DrawingUI = nil;
+
+DrawingLib.new = function(Type)
+	if DrawingUI == nil then
+		DrawingUI = Instance.new("ScreenGui");
+		DrawingUI.Parent = CoreGui;
+		DrawingUI.Name = "DrawingLib"
+		DrawingUI.DisplayOrder = 1999999999
+		DrawingUI.IgnoreGuiInset = true
+	end
+
+	if (Type == "Line") then
+		local LineProperties = ({
+			To = Vector2.new(),
+			From = Vector2.new(),
+			Thickness = 1,
+		} + BaseDrawingProperties)
+
+		local LineFrame = Instance.new("Frame");
+		LineFrame.AnchorPoint = Vector2.new(0.5, 0.5);
+		LineFrame.BorderSizePixel = 0
+
+		LineFrame.BackgroundColor3 = LineProperties.Color
+		LineFrame.Visible = LineProperties.Visible
+		LineFrame.BackgroundTransparency = LineProperties.Transparency
+
+
+		LineFrame.Parent = DrawingUI
+
+		return setmetatable({}, {
+			__newindex = (function(self, Property, Value)
+				if (Property == "To") then
+					local To = Value
+					local Direction = (To - LineProperties.From);
+					local Center = (To + LineProperties.From) / 2
+					local Distance = Direction.Magnitude
+					local Theta = math.atan2(Direction.Y, Direction.X);
+
+					LineFrame.Position = UDim2.fromOffset(Center.X, Center.Y);
+					LineFrame.Rotation = math.deg(Theta);
+					LineFrame.Size = UDim2.fromOffset(Distance, LineProperties.Thickness);
+
+					LineProperties.To = To
+				end
+				if (Property == "From") then
+					local From = Value
+					local Direction = (LineProperties.To - From);
+					local Center = (LineProperties.To + From) / 2
+					local Distance = Direction.Magnitude
+					local Theta = math.atan2(Direction.Y, Direction.X);
+
+					LineFrame.Position = UDim2.fromOffset(Center.X, Center.Y);
+					LineFrame.Rotation = math.deg(Theta);
+					LineFrame.Size = UDim2.fromOffset(Distance, LineProperties.Thickness);
+   
+
+					LineProperties.From = From
+				end
+				if (Property == "Visible") then
+					LineFrame.Visible = Value
+					LineProperties.Visible = Value
+				end
+				if (Property == "Thickness") then
+					Value = Value < 1 and 1 or Value
+
+					local Direction = (LineProperties.To - LineProperties.From);
+					local Distance = Direction.Magnitude
+
+					LineFrame.Size = UDim2.fromOffset(Distance, Value);
+
+					LineProperties.Thickness = Value
+				end
+				if (Property == "Transparency") then
+					LineFrame.BackgroundTransparency = 1 - Value
+					LineProperties.Transparency = Value
+				end
+				if (Property == "Color") then
+					LineFrame.BackgroundColor3 = Value
+					LineProperties.Color = Value 
+				end
+				if (Property == "ZIndex") then
+					LineFrame.ZIndex = Value
+				end
+			end),
+			__index = (function(self, Property)
+				if (string.lower(tostring(Property)) == "remove") then
+					return (function()
+						LineFrame:Destroy();
+					end)
+				end
+				return LineProperties[Property]
+			end)
+		})
+	end
+
+	if (Type == "Circle") then
+		local CircleProperties = ({
+			Radius = 150,
+			Filled = false,
+			Position = Vector2.new()
+		} + BaseDrawingProperties)
+
+		local CircleFrame = Instance.new("Frame");
+
+		CircleFrame.AnchorPoint = Vector2.new(0.5, 0.5);
+		CircleFrame.BorderSizePixel = 0
+
+		CircleFrame.BackgroundColor3 = CircleProperties.Color
+		CircleFrame.Visible = CircleProperties.Visible
+		CircleFrame.BackgroundTransparency = CircleProperties.Transparency
+
+		local Corner = Instance.new("UICorner", CircleFrame);
+		Corner.CornerRadius = UDim.new(1, 0);
+		CircleFrame.Size = UDim2.new(0, CircleProperties.Radius, 0, CircleProperties.Radius);
+
+		CircleFrame.Parent = DrawingUI
+
+		local Stroke = Instance.new("UIStroke", CircleFrame)
+		Stroke.Thickness = .7
+		Stroke.Enabled = false
+
+		return setmetatable({}, {
+			__newindex = (function(self, Property, Value)
+				if (Property == "Radius") then
+					CircleFrame.Size = UDim2.new(0, Value, 0, Value);
+					CircleProperties.Radius = Value
+				end
+				if (Property == "Position") then
+					CircleFrame.Position = UDim2.new(0, Value.X, 0, Value.Y);
+					CircleProperties.Position = Value
+				end
+				if (Property == "Thickness") then
+					Stroke.Thickness = math.clamp(Value, .6, 2147483647)
+				end
+				if (Property == "Filled") then
+					CircleFrame.BackgroundTransparency = Value == true and 0 or 1
+					Stroke.Enabled = not Value
+					CircleProperties.Filled = Value
+				end
+				if (Property == "Color") then
+					CircleFrame.BackgroundColor3 = Value
+					Stroke.Color = Value
+					CircleProperties.Color = Value
+				end
+				if (Property == "Visible") then
+					CircleFrame.Visible = Value
+					CircleProperties.Visible = Value
+				end
+				if (Property == "ZIndex") then
+					CircleFrame.ZIndex = Value
+				end
+			end),
+			__index = (function(self, Property)
+				if (string.lower(tostring(Property)) == "remove") then
+					return (function()
+						CircleFrame:Destroy();
+					end)
+				end
+
+				return CircleProperties[Property]
+			end)
+		})
+	end
+
+	if (Type == "Text") then
+		local TextProperties = ({
+			Text = "",
+			Size = 0,
+			Center = false,
+			Outline = false,
+			OutlineColor = Color3.new(),
+			Position = Vector2.new(),
+		} + BaseDrawingProperties)
+
+		local TextLabel = Instance.new("TextLabel");
+
+		TextLabel.AnchorPoint = Vector2.new(0.5, 0.5);
+		TextLabel.BorderSizePixel = 0
+		TextLabel.Size = UDim2.new(0, 200, 0, 50);
+		TextLabel.Font = Enum.Font.SourceSans
+		TextLabel.TextSize = 14
+
+		TextLabel.TextColor3 = TextProperties.Color
+		TextLabel.Visible = TextProperties.Visible
+		TextLabel.BackgroundTransparency = 1
+		TextLabel.TextTransparency = 1 - TextProperties.Transparency
+		
+		local Stroke = Instance.new("UIStroke", TextLabel)
+		Stroke.Thickness = 0.5
+		Stroke.Enabled = false
+		Stroke.Color = Color3.fromRGB(0, 0, 0)
+
+		TextLabel.Parent = DrawingUI
+
+		return setmetatable({}, {
+			__newindex = (function(self, Property, Value)
+				if (Property == "Text") then
+					TextLabel.Text = Value
+					TextProperties.Text = Value
+				end
+				if (Property == "Position") then
+					TextLabel.Position = UDim2.new(0, Value.X, 0, Value.Y + 36);
+					TextProperties.Position = Value
+				end
+				if (Property == "Size") then
+					TextLabel.TextSize = Value
+					TextProperties.Size = Value
+				end
+				if (Property == "Color") then
+					TextLabel.TextColor3 = Value
+					TextProperties.Color = Value
+					Stroke.Color = Value
+				end
+				if (Property == "Transparency") then
+					TextLabel.TextTransparency = 1 - Value
+					TextProperties.Transparency = Value
+				end
+				if (Property == "Visible") then
+					TextLabel.Visible = Value
+					TextProperties.Visible = Value
+				end
+				if (Property == "Outline") then
+					Stroke.Enabled = Value
+				end
+				if (Property == "Center") then
+					TextLabel.Position = Value == true and UDim2.new(0, Camera2.ViewportSize.X / 2, Camera2.ViewportSize.Y / 2, 0)
+					TextProperties.Center = Value
+				end
+				if (Property == "ZIndex") then
+					TextLabel.ZIndex = Value
+				end
+			end),
+			__index = (function(self, Property)
+				if (string.lower(tostring(Property)) == "remove") then
+					return (function()
+						TextLabel:Destroy();
+					end)
+				end
+
+				return TextProperties[Property]
+			end)
+		})
+	end
+
+	if (Type == "Square") then
+		local SquareProperties = ({
+			Thickness = 0.6,
+			Size = Vector2.new(),
+			Position = Vector2.new(),
+			Filled = false,
+		} + BaseDrawingProperties);
+
+		local SquareFrame = Instance.new("Frame");
+
+		SquareFrame.BorderSizePixel = 0
+
+		SquareFrame.Visible = false
+		SquareFrame.Parent = DrawingUI
+
+		local Stroke = Instance.new("UIStroke", SquareFrame)
+		Stroke.Thickness = 0.6
+		Stroke.Enabled = false
+		Stroke.LineJoinMode = Enum.LineJoinMode.Miter
+
+		return setmetatable({}, {
+			__newindex = (function(self, Property, Value)
+				if (Property == "Size") then
+					SquareFrame.Size = UDim2.new(0, Value.X, 0, Value.Y);
+					SquareProperties.Text = Value
+				end
+				if (Property == "Position") then
+					SquareFrame.Position = UDim2.new(0, Value.X, 0, Value.Y)
+					SquareProperties.Position = Value
+				end
+				if (Property == "Size") then
+					SquareFrame.Size = UDim2.new(0, Value.X, 0, Value.Y);
+					SquareProperties.Size = Value
+				end
+                if (Property == "Thickness") then
+					Stroke.Thickness = math.clamp(Value, 0.6, 2147483647)
+					SquareProperties.Thickness = math.clamp(Value, 0.6, 2147483647)
+				end
+				if (Property == "Color") then
+					SquareFrame.BackgroundColor3 = Value
+					Stroke.Color = Value
+					SquareProperties.Color = Value
+				end
+				if (Property == "Transparency") then
+					SquareFrame.BackgroundTransparency = Value
+					SquareProperties.Transparency = Value
+				end
+				if (Property == "Visible") then
+					SquareFrame.Visible = Value
+					SquareProperties.Visible = Value
+				end
+				if (Property == "Filled") then
+					SquareFrame.BackgroundTransparency = (Value == true and 0 or 1)
+					Stroke.Enabled = not Value
+					SquareProperties.Filled = Value
+				end
+				if (Property == "ZIndex") then
+					SquareFrame.ZIndex = Value
+				end
+			end),
+			__index = (function(self, Property)
+				if (string.lower(tostring(Property)) == "remove") then
+					return (function()
+						SquareFrame:Destroy();
+					end)
+				end
+
+				return SquareProperties[Property]
+			end)
+		})
+	end
+
+	if (Type == "Image") then
+		local ImageProperties = ({
+			Data = "rbxassetid://848623155",
+			Size = Vector2.new(),
+			Position = Vector2.new(),
+			Rounding = 0,
+		});
+
+		local ImageLabel = Instance.new("ImageLabel");
+
+		ImageLabel.BorderSizePixel = 0
+		ImageLabel.ScaleType = Enum.ScaleType.Stretch
+		ImageLabel.Transparency = 1
+
+		ImageLabel.Visible = false
+		ImageLabel.Parent = DrawingUI
+
+		return setmetatable({}, {
+			__newindex = (function(self, Property, Value)
+				if (Property == "Size") then
+					ImageLabel.Size = UDim2.new(0, Value.X, 0, Value.Y);
+					ImageProperties.Text = Value
+				end
+				if (Property == "Position") then
+					ImageLabel.Position = UDim2.new(0, Value.X, 0, Value.Y);
+					ImageProperties.Position = Value
+				end
+				if (Property == "Size") then
+					ImageLabel.Size = UDim2.new(0, Value.X, 0, Value.Y);
+					ImageProperties.Size = Value
+				end
+				if (Property == "Transparency") then
+					ImageLabel.ImageTransparency = 1 - Value
+					ImageProperties.Transparency = Value
+				end
+				if (Property == "Visible") then
+					ImageLabel.Visible = Value
+					ImageProperties.Visible = Value
+				end
+				if (Property == "Color") then
+					ImageLabel.ImageColor3 = Value
+					ImageProperties.Color = Value
+				end
+				if (Property == "Data") then
+					ImageLabel.Image = Value
+					ImageProperties.Data = Value
+				end
+				if (Property == "ZIndex") then
+					ImageLabel.ZIndex = Value
+				end
+			end),
+			__index = (function(self, Property)
+				if (string.lower(tostring(Property)) == "remove") then
+					return (function()
+						ImageLabel:Destroy();
+					end)
+				end
+
+				return ImageProperties[Property]
+			end)
+		})
+	end
+
+
+	if (Type == "Quad") then -- idk if this will work lmao
+		local QuadProperties = ({
+			Thickness = 1,
+			PointA = Vector2.new();
+			PointB = Vector2.new();
+			PointC = Vector2.new();
+			PointD = Vector2.new();
+			Filled = false;
+		}  + BaseDrawingProperties);
+
+		local PointA = DrawingLib.new("Line")
+		local PointB = DrawingLib.new("Line")
+		local PointC = DrawingLib.new("Line")
+		local PointD = DrawingLib.new("Line")
+
+		return setmetatable({}, {
+			__newindex = (function(self, Property, Value)
+				if Property == "Thickness" then
+					PointA.Thickness = Value
+					PointB.Thickness = Value
+					PointC.Thickness = Value
+					PointD.Thickness = Value
+				end
+				if Property == "PointA" then
+					PointA.From = Value
+					PointB.To = Value
+				end
+				if Property == "PointB" then
+					PointB.From = Value
+					PointC.To = Value
+				end
+				if Property == "PointC" then
+					PointC.From = Value
+					PointD.To = Value
+				end
+				if Property == "PointD" then
+					PointD.From = Value
+					PointA.To = Value
+				end
+				if Property == "Visible" then 
+					PointA.Visible = true
+					PointB.Visible = true
+					PointC.Visible = true
+					PointD.Visible = true	
+				end
+				if Property == "Filled" then
+                    PointA.Filled = Value
+                    PointB.Filled = Value
+                    PointC.Filled = Value
+				end
+				if Property == "Color" then
+					PointA.Color = Value
+					PointB.Color = Value
+					PointC.Color = Value
+					PointD.Color = Value
+				end
+				if (Property == "ZIndex") then
+					PointA.ZIndex = Value
+					PointB.ZIndex = Value
+					PointC.ZIndex = Value
+					PointD.ZIndex = Value
+				end
+			end),
+			__index = (function(self, Property)
+				if (string.lower(tostring(Property)) == "remove") then
+					return (function()
+						PointA:Remove();
+						PointB:Remove();
+						PointC:Remove();
+						PointD:Remove();
+					end)
+				end
+
+				return QuadProperties[Property]
+			end)
+		});
+	end
+	if (Type == "Triangle") then  -- idk if this will work lmao
+		local TriangleProperties = ({
+			Thickness = 1,
+			PointA = Vector2.new();
+			PointB = Vector2.new();
+			PointC = Vector2.new();
+			Filled = false;
+		}  + BaseDrawingProperties);
+
+		local PointA = DrawingLib.new("Line")
+		local PointB = DrawingLib.new("Line")
+		local PointC = DrawingLib.new("Line")
+
+		return setmetatable({}, {
+			__newindex = (function(self, Property, Value)
+				if Property == "Thickness" then
+					PointA.Thickness = Value
+					PointB.Thickness = Value
+					PointC.Thickness = Value
+				end
+				if Property == "PointA" then
+					PointA.From = Value
+					PointB.To = Value
+					TriangleProperties.PointA = Value
+				end
+				if Property == "PointB" then
+					PointB.From = Value
+					PointC.To = Value
+					TriangleProperties.PointB = Value
+				end
+				if Property == "PointC" then
+					PointC.From = Value
+					PointA.To = Value
+					TriangleProperties.PointC = Value
+				end
+				if Property == "Visible" then
+					PointA.Visible = Value
+					PointB.Visible = Value
+					PointC.Visible = Value
+				end
+				if Property == "Filled" then
+                    PointA.Filled = Value
+                    PointB.Filled = Value
+                    PointC.Filled = Value
+				end
+				if Property == "Color" then
+					PointA.Color = Value
+					PointB.Color = Value
+					PointC.Color = Value
+				end
+				if (Property == "ZIndex") then
+					PointA.ZIndex = Value
+					PointB.ZIndex = Value
+					PointC.ZIndex = Value
+				end
+			end),
+			__index = (function(self, Property)
+				if (string.lower(tostring(Property)) == "remove") then
+					return (function()
+						PointA:Remove();
+						PointB:Remove();
+						PointC:Remove();
+					end)
+				end
+
+				return TriangleProperties[Property]
+			end)
+		});
+	end
+end
+DrawingLib.clear = function()
+	if DrawingUI then 
+		DrawingUI:ClearAllChildren();
+	end
 end
 
--- // Watermark Function // -- @canyoulovemeback on discord / supercoolboi34
-local function showWatermark()
-    if getgenv().SharpSSilent.Watermark.Enabled then
-        local screenGui = Instance.new("ScreenGui", game.CoreGui)
-        local frame = Instance.new("Frame", screenGui)
-        frame.Size = UDim2.new(0, 400, 0, 150)  -- Increased size for better visibility
-        frame.Position = UDim2.new(0.5, -200, 0.5, -75)  -- Centered on screen
-        frame.BackgroundTransparency = 1
-        frame.AnchorPoint = Vector2.new(0.5, 0.5)
-        frame.ClipsDescendants = true
-        frame.ZIndex = 2
+if RunService:IsStudio() then
+	return DrawingLib
+else
+	if getgenv then
+		getgenv()["Drawing"] = DrawingLib
+		getgenv()["Clear_drawing_lib"] = DrawingLib.clear
+	else
+		Drawing = DrawingLib
+        Clear_drawing_lib = DrawingLib.clear
+	end
+end
 
-        local title = Instance.new("TextLabel", frame)
-        title.Size = UDim2.new(1, 0, 0.6, 0)
-        title.Position = UDim2.new(0, 0, 0.1, 0)
-        title.BackgroundTransparency = 1
-        title.TextColor3 = Color3.fromRGB(0, 162, 232)
-        title.Text = "S"
-        title.Font = Enum.Font.GothamBlack
-        title.TextScaled = true
-        title.TextWrapped = true
-        title.ZIndex = 3
+getgenv().Drawing.Fonts = {
+    UI = 0,
+    System = 1,
+    Plex = 2,
+    Monospace = 3
+}
 
-        local subtitle = Instance.new("TextLabel", frame)
-        subtitle.Size = UDim2.new(1, 0, 0.3, 0)
-        subtitle.Position = UDim2.new(0, 0, 0.7, 0)
-        subtitle.BackgroundTransparency = 1
-        subtitle.TextColor3 = Color3.fromRGB(0, 162, 232)
-        subtitle.Text = "discord.gg/sharpcc"
-        subtitle.Font = Enum.Font.Gotham
-        subtitle.TextScaled = true
-        subtitle.TextWrapped = true
-        subtitle.ZIndex = 3
+-- user types
+if Private.Mode == "User" then
+    ScriptContext.Error:GetConnections():Disable()
+elseif Private.Mode == "Dev" then
+    ScriptContext.Error:GetConnections():Connect()
+end
 
-        frame.BackgroundTransparency = 1
-        frame:TweenSizeAndPosition(
-            UDim2.new(0, 400, 0, 150),
-            UDim2.new(0.5, -200, 0.5, -75),
-            Enum.EasingDirection.Out,
-            Enum.EasingStyle.Quad,
-            0.5,
-            true
-        )
+if Private.Recoil_Nil == true then 
+    local originalNewIndex
+    local function isFramework(scriptInstance)
+        return tostring(scriptInstance) == "Framework"
+    end
+    
+    local function checkArgs(instance, index)
+        return tostring(instance):lower():find("camera") and tostring(index) == "CFrame"
+    end
 
-        delay(7, function()
-            frame:TweenSizeAndPosition(
-                UDim2.new(0, 0, 0, 0),
-                UDim2.new(0.5, 0, 0.5, 0),
-                Enum.EasingDirection.In,
-                Enum.EasingStyle.Quad,
-                0.5,
-                true,
-                function()
-                    screenGui:Destroy()
+    originalNewIndex = hookmetamethod(game, "__newindex", function(self, index, value)
+        local callingScript = getcallingscript()
+    
+        if isFramework(callingScript) and checkArgs(self, index) then
+            return
+        end
+        return originalNewIndex(self, index, value)
+    end) 
+end
+
+if Private.Intro then 
+    local Flash = Instance.new("ColorCorrectionEffect")
+    local Blur = Instance.new("BlurEffect")
+    local Gui = Instance.new("ScreenGui")
+    local Image = Instance.new("ImageLabel")
+    
+    Flash.Parent = game.Lighting
+    
+    Blur.Parent = game.Lighting
+    Blur.Size = 0
+        
+    Gui.Name = "RobloxGui"
+    Gui.Parent = game.CoreGui
+    Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        
+    Image.Parent = Gui
+    Image.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Image.BackgroundTransparency = 1.000
+    Image.Position = UDim2.new(0.405, 0, 0.405, 0)
+    Image.Size = UDim2.new(0.17, 0, 0.27, 0)
+    Image.ImageTransparency = 1
+    Image.Image = "rbxassetid://224144479"
+        
+    local Create = Tween:Create(Blur, TweenInfo.new(1.5, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {Size = 50})
+    Create:Play()
+    Create.Completed:Wait()
+    local Create2 = Tween:Create(Image, TweenInfo.new(1, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {ImageTransparency = 0.2})
+    Create2:Play()
+    Create2.Completed:Wait()
+    local Create3 = Tween:Create(Image, TweenInfo.new(0.3, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {Size = UDim2.new(0.15, 0, 0.25, 0)})
+    Create3:Play()
+    local Create4 = Tween:Create(Image, TweenInfo.new(0.3, Enum.EasingStyle.Bounce, Enum.EasingDirection.Out), {Position = UDim2.new(0.415, 0, 0.415, 0)})
+    Create4:Play()
+    Flash.TintColor = Color3.fromRGB(223, 91, 91)
+    Tween:Create(Flash, TweenInfo.new(0.7), {TintColor = Color3.fromRGB(255, 255, 255)}):Play()
+    task.wait(1)
+    Tween:Create(Image, TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {ImageTransparency = 1}):Play()
+    local Create5 = Tween:Create(Blur, TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = 0})
+    Create5:Play()
+    Create5.Completed:Wait()
+        
+    Gui:Destroy()
+    Flash:Destroy()
+    Blur:Destroy()
+end
+
+if Private.Redirection.Enabled then
+    if Private.Keybinds.Redirection[1] then 
+        UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+            if not gameProcessedEvent then
+                if input.KeyCode == Enum.KeyCode[Private.Keybinds.Redirection[2]] and Private.Keybinds.Redirection[1] then
+                    Private.Redirection.Enabled = not Private.Redirection.Enabled
                 end
-            )
+            end
         end)
-
-        if getgenv().SharpSSilent.Watermark.Sound then
-            local sound = Instance.new("Sound", SoundService)
-            sound.SoundId = "rbxassetid://9119802009"
-            sound:Play()
-            delay(3, function()
-                sound:Destroy()
-            end)
-        end
-
-        if getgenv().SharpSSilent.Watermark.Music then
-            local music = Instance.new("Sound", SoundService)
-            music.SoundId = "rbxassetid://9045766377"
-            music.Looped = true
-            music:Play()
-        end
     end
-end
-
--- // Knock Check // -- @canyoulovemeback on discord / supercoolboi34
-local function Death(Plr)
-    if Plr.Character and Plr.Character:FindFirstChild("BodyEffects") then
-        local bodyEffects = Plr.Character.BodyEffects
-        local ko = bodyEffects:FindFirstChild("K.O") or bodyEffects:FindFirstChild("KO")
-        return ko and ko.Value
+    local cheese 
+    if Private.Redirection.Entities.type == "Player" then 
+        cheese = game.Players:GetPlayers().Character
+    elseif Private.Redirection.Entities.type == "NPC" then
+        cheese = workspace:FindFirstChild(Private.Redirection.Entities.npc_folder)
+    elseif Private.Redirection.Entities.type == "Both" then
+        cheese = workspace:FindFirstChild(Private.Redirection.Entities.npc_folder) and game.Players:GetPlayers().Character
     end
-    return false
-end
 
--- // Grab Check // -- @canyoulovemeback on discord / supercoolboi34
-local function Grabbed(Plr)
-    return Plr.Character and Plr.Character:FindFirstChild("GRABBING_CONSTRAINT") ~= nil
-end
+    local CirclePosition
 
--- // Fall Check // -- @canyoulovemeback on discord / supercoolboi34
-local function isFalling(Plr)
-    if Plr.Character and Plr.Character:FindFirstChild("Humanoid") then
-        return Plr.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall
+    local Circle = DrawingLib.new("Circle")
+    Circle.Radius = Private.Redirection.FOV.Visual.Radius
+    Circle.Visible = Private.Redirection.FOV.Visual.Visible
+    Circle.Color = Private.Redirection.FOV.Visual.Color
+    Circle.Filled = Private.Redirection.FOV.Visual.Filled
+    Circle.Transparency = Private.Redirection.FOV.Visual.Transparency
+    Circle.Position = CirclePosition
+
+    if Private.Redirection.FOV.Settings.Multiplied[1] then 
+        Circle.Radius = Private.Redirection.FOV.Radius * Private.Redirection.FOV.Settings.Multiplied[2]
     end
-    return false
-end
 
--- // Check if Part in Fov and Visible // -- @canyoulovemeback on discord / supercoolboi34
-local function isPartInFovAndVisible(part)
-    local screenPoint, onScreen = Current_Camera:WorldToScreenPoint(part.Position)
-    local distance = (V2(screenPoint.X, screenPoint.Y) - V2(Mouse.X, Mouse.Y)).Magnitude
-    return onScreen and distance <= getgenv().SharpSSilent.FovSettings.FovRadius
-end
+    local function getClosestPlayerToCursor()
+        local closestPlayer
+        local shortestDistance
 
--- // Check if Part Visible // -- @canyoulovemeback on discord / supercoolboi34
-local function isPartVisible(part)
-    if not getgenv().SharpSSilent.WallCheck then 
-        return true
-    end
-    local origin = Current_Camera.CFrame.Position
-    local direction = (part.Position - origin).Unit * (part.Position - origin).Magnitude
-    local ray = Ray.new(origin, direction)
-    local hit = Workspace:FindPartOnRayWithIgnoreList(ray, {Local_Player.Character, part.Parent})
-    return hit == part or not hit
-end
+            if cheese ~= LocalPlayer and cheese and cheese:FindFirstChild("Humanoid") and cheese.Humanoid.Health > 0 and cheese:FindFirstChild(Part2) then
+                local position = workspace.CurrentCamera:WorldToViewportPoint(cheese.PrimaryPart.Position)
+                local distanceToCursor = (Vector2.new(position.X, position.Y) - Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)).magnitude
 
--- // Get Closest Hit Point on Part // -- @canyoulovemeback on discord / supercoolboi34
-local function GetClosestHitPoint(character)
-    local closestPart = nil
-    local closestPoint = nil
-    local shortestDistance = math.huge
+                local isWithinRadiusOrSize
 
-    for _, part in pairs(character:GetChildren()) do
-        if part:IsA("BasePart") and isPartInFovAndVisible(part) and isPartVisible(part) then
-            local partSize = part.Size
-            local halfSize = partSize / 2
-            local partCorners = {
-                part.CFrame * Vector3.new(-halfSize.X * 0.7, -halfSize.Y * 0.7, -halfSize.Z * 0.7),
-                part.CFrame * Vector3.new(halfSize.X * 0.7, -halfSize.Y * 0.7, -halfSize.Z * 0.7),
-                part.CFrame * Vector3.new(halfSize.X * 0.7, halfSize.Y * 0.7, -halfSize.Z * 0.7),
-                part.CFrame * Vector3.new(-halfSize.X * 0.7, halfSize.Y * 0.7, -halfSize.Z * 0.7),
-                part.CFrame * Vector3.new(-halfSize.X * 0.7, -halfSize.Y * 0.7, halfSize.Z * 0.7),
-                part.CFrame * Vector3.new(halfSize.X * 0.7, -halfSize.Y * 0.7, halfSize.Z * 0.7),
-                part.CFrame * Vector3.new(halfSize.X * 0.7, halfSize.Y * 0.7, halfSize.Z * 0.7),
-                part.CFrame * Vector3.new(-halfSize.X * 0.7, halfSize.Y * 0.7, halfSize.Z * 0.7)
-            }
+                if Private.Redirection.FOV.Settings.Use_FOV then
+                    isWithinRadiusOrSize = distanceToCursor <= Circle.Radius
+                else
+                    isWithinRadiusOrSize = true
+                end
 
-            for _, corner in pairs(partCorners) do
-                local screenPoint, onScreen = Current_Camera:WorldToScreenPoint(corner)
-                local distance = (V2(screenPoint.X, screenPoint.Y) - V2(Mouse.X, Mouse.Y)).Magnitude
-
-                if onScreen and distance < shortestDistance then
-                    closestPart = part
-                    closestPoint = corner
-                    shortestDistance = distance
+                if isWithinRadiusOrSize and (not shortestDistance or distanceToCursor < shortestDistance) then
+                    closestPlayer = cheese
+                    shortestDistance = distanceToCursor
                 end
             end
+
+        return closestPlayer
+    end
+
+    Silent_Target = getClosestPlayerToCursor()
+
+    if Private.Redirection.FOV.Settings.Indicator and Silent_Target == getClosestPlayerToCursor() then 
+        Circle.Color = Color3.new(0, 1, 0)
+    elseif Private.Redirection.FOV.Settings.Indicator and Silent_Target == nil then 
+        Circle.Color = Color3.new(1, 0, 0)
+    end
+
+    function GetClosestPart(Player)
+        if Player and Player.Character then
+            local closestpart = nil
+            for part in pairs(Player.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    if CC:WorldToScreenPoint(part.Position) and Private.Redirection.FOV.Visual.Radius or (Vector2.new(CC:WorldToScreenPoint(part.Position).X, CC:WorldToScreenPoint(part.Position).Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude < math.huge then
+                        closestpart, math.huge = part, (Vector2.new(CC:WorldToScreenPoint(part.Position).X, CC:WorldToScreenPoint(part.Position).Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude
+                    end
+                end
+            end
+            return closestpart
         end
     end
 
-    return closestPart, closestPoint
-end
+    function GetWhitelistedPart(Player)
+        if Player and Player.Character then
+            local closestpart = nil
+            for part in pairs(Player.Character:GetDescendants()) do
+                if part:IsA("BasePart") and Private.Camera.Part.Custom.Enabled and table.find(Private.Camera.Part.Custom.Parts, part.Name) == nil then
+                    if CC:WorldToScreenPoint(part.Position) and Private.Redirection.FOV.Visual.Radius or (Vector2.new(CC:WorldToScreenPoint(part.Position).X, CC:WorldToScreenPoint(part.Position).Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude < math.huge then
+                        closestpart, math.huge = part, (Vector2.new(CC:WorldToScreenPoint(part.Position).X, CC:WorldToScreenPoint(part.Position).Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude
+                    end
+                end
+            end
+            return closestpart
+        end
+    end
 
--- // Get Closest Hit Point on Base Part // -- @canyoulovemeback on discord / supercoolboi34
-local function GetClosestBasePart(character)
-    local closestPart = nil
-    local shortestDistance = math.huge
-    local baseParts = {
-        "Head", "HumanoidRootPart", "LeftLeg", "RightLeg",
-        "LeftArm", "RightArm", "UpperTorso", "LowerTorso",
-        "LeftLowerLeg", "RightLowerLeg"
-    }
+    if Private.Redirection.Hit_Randomizer.Enabled then 
+        Part2 = (Part2 + math.random(Private.Redirection.Hit_Randomizer.Randomization, 0.01))
+    end
 
-    for _, partName in pairs(baseParts) do
-        local part = character:FindFirstChild(partName)
-        if part and isPartInFovAndVisible(part) and isPartVisible(part) then
-            local screenPoint, onScreen = Current_Camera:WorldToScreenPoint(part.Position)
-            local distance = (V2(screenPoint.X, screenPoint.Y) - V2(Mouse.X, Mouse.Y)).Magnitude
+    function math.clamp(value, min, max)
+        return math.max(min, math.min(max, value))
+    end
 
-            if onScreen and distance < shortestDistance then
-                closestPart = part
-                shortestDistance = distance
+    function ClosestPointOnPart(part, point)
+        local Points = nil
+        local NormalPart = Private.Redirection.Part.Horizontal or Private.Redirection.Part.Vertical[2] or GetClosestPart() or GetWhitelistedPart()
+        local Percentage = Private.Redirection.Part.Nearest.Point_Percentage * 1000
+        local Range = part.Size / 2
+        local Differential = point - part.CFrame.p
+        Points = Vector3.new(
+            math.clamp(Differential.x, -Range.x * Percentage, Range.x * Percentage),
+            math.clamp(Differential.y, -Range.y * Percentage, Range.y * Percentage),
+            math.clamp(Differential.z, -Range.z * Percentage, Range.z * Percentage)
+        )
+        return NormalPart and NormalPart.CFrame:pointToWorldSpace(Points)
+    end
+
+    function ClosestPointOnPartV2()
+        local Points = nil
+        local Percentage = Private.Redirection.Part.Nearest.Point_Percentage
+        local NormalPart = Private.Redirection.Part.Horizontal or Private.Redirection.Part.Vertical[2] or GetClosestPart() or GetWhitelistedPart()
+        if Silent_Target ~= nil then
+            if Silent_Target.Character:FindFirstChild(NormalPart) then
+                local Hit, Half = Mouse.Hit.p, Silent_Target.Character:FindFirstChild(NormalPart).Size * 0.5
+                local Transform = Silent_Target.Character[NormalPart].CFrame:ToObjectSpace(Hit)
+                Points = CFrame.new(
+                    Silent_Target.Character[NormalPart].CFrame * Vector3.new(math.clamp(Transform.X, -Half.X * Percentage, Half.X * Percentage)),
+                    Silent_Target.Character[NormalPart].CFrame * Vector3.new(math.clamp(Transform.Y, -Half.Y * Percentage, Half.Y * Percentage)),
+                    Silent_Target.Character[NormalPart].CFrame * Vector3.new(math.clamp(Transform.Z, -Half.Z * Percentage, Half.Z * Percentage))
+                )
+            end
+        end
+        return Points
+    end
+    
+    function ClosestPointOnPartFunctionality()
+        if Silent_Target then
+            if GetClosestPart(Silent_Target) or GetWhitelistedPart(Silent_Target) then
+                return ClosestPointOnPart(Silent_Target, Mouse.hit.p) or ClosestPointOnPartV2()
             end
         end
     end
 
-    return closestPart, closestPart and closestPart.Position or nil
-end
-
--- // Get Velocity Function // -- @canyoulovemeback on discord / supercoolboi34
-if SharpSSilent.prediction.Resolver == true then
-
-local previousPosition = nil
+    local previousPosition = nil
     local previousTime = nil
     
     local function NewVelocity(object)
@@ -410,317 +1117,816 @@ local previousPosition = nil
         previousTime = currentTime
     end
     
-    game:GetService("RunService").Heartbeat:Connect(function()
-        if  Target.Character and Target.Character:FindFirstChild(SharpSSilent.targeting.HitPart).Velocity.magnitude > SharpSSilent.Magnitude then
-            NewVelocity(Target.Character[SharpSSilent.Targeting.HitPart])
+    RunService.Heartbeat:Connect(function()
+        if Silent_Target and Silent_Target.Character and Silent_Target.Character:FindFirstChild(Part2).Velocity.magnitude > Private.Redirection.Resolving.Magnitude then
+            NewVelocity(Silent_Target.Character[Part2])
         end
     end)
 
-
--- // Get Target Hit Point // -- @canyoulovemeback on discord / supercoolboi34
-local function GetTargetHitPoint(character)
-    local hitPart = character:FindFirstChild(getgenv().SharpSSilent.Targeting.HitPart)
-    if hitPart and isPartVisible(hitPart) and isPartInFovAndVisible(hitPart) then
-        return hitPart, hitPart.Position
-    end
-    return nil, nil
-end
-
--- // Get Closest Player // -- @canyoulovemeback on discord / supercoolboi34
-local function GetClosestPlr()
-    local closestTarget = nil
-    local maxDistance = math.huge
-
-    for _, player in pairs(Players:GetPlayers()) do
-        if player.Character and player ~= Local_Player and not Death(player) and not Grabbed(player) then
-            local closestPart, closestPoint
-            if getgenv().SharpSSilent.Targeting.TargetMode == "Closest" then
-                if getgenv().SharpSSilent.Targeting.ClosestHitPoint then
-                    closestPart, closestPoint = GetClosestHitPoint(player.Character)
-                else
-                    closestPart, closestPoint = GetClosestBasePart(player.Character)
-                end
-            else
-                closestPart, closestPoint = GetTargetHitPoint(player.Character)
-            end
-
-            if closestPart and closestPoint and isPartVisible(closestPart) then
-                local screenPoint = Current_Camera:WorldToScreenPoint(closestPoint)
-                local distance = (V2(screenPoint.X, screenPoint.Y) - V2(Mouse.X, Mouse.Y)).Magnitude
-                if distance < maxDistance then
-                    maxDistance = distance
-                    closestTarget = player
-                end
-            end
-        end
+    if Private.FOV.Positioning.Method == "Middle" then 
+        CirclePosition = Vector2.new(CC.ViewportSize.X / 2, CC.ViewportSize.Y / 2)
+    elseif Private.FOV.Positioning.Method == "Mouse_Follow" then 
+        CirclePosition = Vector2.new(Mouse.X, Mouse.Y)
+    elseif Private.FOV.Positioning.Method == "Target_Follow" and Silent_Target then
+        CirclePosition = Vector2.new(workspace.CC:WorldToViewportPoint(Silent_Target.Character[Part2].Position).X, workspace.CC:worldToViewportPoint(Silent_Target.Character[Part2].Position).Y)
+    elseif Private.FOV.Positioning.Method == "Offset" and Silent_Target then
+        CirclePosition = Vector2.new(CC.ViewportSize.X / Private.FOV.Positioning.Offset[1], CC.ViewportSize.Y / Private.FOV.Positioning.Offset[2])
     end
 
-    return closestTarget
-end
-
--- // Toggle Feature // -- @canyoulovemeback on discord / supercoolboi34
-local function toggleFeature()
-    getgenv().SharpSSilent.Enabled = not getgenv().SharpSSilent.Enabled
-    local status = getgenv().SharpSSilent.Enabled and "Sharp Enabled" or "Sharp Disabled"
-    if not getgenv().SharpSSilent.ToggleNotification then
-        sendNotification("Sharp [S] Silent", status, "rbxassetid://17561420493")
+    if Private.Redirection.Prediction.Set.Vertical[1] and JumpState then
+        Prediction2 = Private.Redirection.Prediction.Set.Vertical[2]
+    else 
+        Prediction2 = Private.Redirection.Prediction.Set.Horizontal
     end
-    if not getgenv().SharpSSilent.Enabled then
-        Fov.Visible = false
-        HitPoint.Visible = false
-        clearFovParts()
+
+    if Private.Redirection.Prediction.Set.Z_Axis[1] and Silent_Target and Silent_Target.Character[Part2].Velocity.Z then 
+        Prediction2 = Private.Redirection.Prediction.Set.Z_Axis[2]
+    elseif not Private.Redirection.Prediction.Set.Z_Axis[1] then
+        Prediction2 = Private.Redirection.Prediction.Set.Horizontal or Private.Redirection.Prediction.Set.Vertical[2]
     end
-end
 
--- // Convert Keybind to KeyCode // -- @canyoulovemeback on discord / supercoolboi34
-local function getKeyCodeFromString(key)
-    return Enum.KeyCode[key]
-end
-
--- // Keybind Listener // -- @canyoulovemeback on discord / supercoolboi34
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode == getKeyCodeFromString(getgenv().SharpSSilent.Keybind) then
-        toggleFeature()
+    if Private.Redirection.Part.Vertical[1] and JumpState then
+        Part2 = Private.Redirection.Part.Vertical[2]
+    else 
+        Part2 = Private.Redirection.Horizontal
     end
-end)
 
--- // Main Loop // -- @canyoulovemeback on discord / supercoolboi34
-Run_Service.RenderStepped:Connect(function()
-    frameCounter = frameCounter + 1
-    if getgenv().SharpSSilent.Enabled then
-        if getgenv().SharpSSilent.Humanization.Enabled and (tick() - lastSwitchTime < getgenv().SharpSSilent.Humanization.TargetSwitchDuration) then
-            return
-        end
+    if Private.Redirection.Part.Nearest.Enabled then 
+        if Private.Redirection.Part.Nearest.Type == "Point" then
+            if Private.Redirection.Part.Nearest.Point_Method == "WS" then
+                Part2 = ClosestPointOnPart()
+            elseif Private.Redirection.Part.Nearest.Point_Method == "Transform" then
+                Part2 = ClosestPointOnPartV2()
+            end 
+        end 
+    elseif Private.Redirection.Part.Nearest.Type == "Part" then 
+        Part2 = GetClosestPart()
+    elseif Private.Redirection.Part.Custom.Enabled then
+        Part2 = GetWhitelistedPart()
+    end
 
-        Target = GetClosestPlr()
-        if Target and Target.Character and getgenv().SharpSSilent.Targeting.UntargetOnFall then
-            local isCurrentlyFalling = isFalling(Target)
-            if isCurrentlyFalling then
-                if not fallStartTime[Target] then
-                    fallStartTime[Target] = tick()
-                elseif tick() - fallStartTime[Target] > getgenv().SharpSSilent.Targeting.FallThreshold then
-                    Target = nil
-                end
-            else
-                fallStartTime[Target] = nil
-            end
-        end
+    if Private.Redirection.Prediction.Enabled then 
+        Prediction2 = Prediction2
+    else
+        Prediction2 = 0
+    end
 
-        updateFov()
-        if Target and Target.Character then
-            local closestPart, closestPoint
-            if getgenv().SharpSSilent.Targeting.TargetMode == "Closest" then
-                if getgenv().SharpSSilent.Targeting.ClosestHitPoint then
-                    closestPart, closestPoint = GetClosestHitPoint(Target.Character)
-                else
-                    closestPart, closestPoint = GetClosestBasePart(Target.Character)
-                end
-            else
-                closestPart, closestPoint = GetTargetHitPoint(Target.Character)
-            end
-
-            if closestPart and closestPoint then
-                local hitPointSettings = getgenv().SharpSSilent.HitPoint
-                if hitPointSettings.ShowHitPoint then
-                    HitPoint.Visible = true
-                    local screenPoint = Current_Camera:WorldToViewportPoint(closestPoint)
-                    HitPoint.Position = V2(screenPoint.X, screenPoint.Y)
-                    HitPoint.Color = hitPointSettings.HitPointColor
-                    HitPoint.Radius = hitPointSettings.HitPointRadius
-                    HitPoint.Thickness = hitPointSettings.HitPointThickness
-                    HitPoint.Transparency = hitPointSettings.HitPointTransparency
-                    HitPoint.Filled = true
-                else
-                    HitPoint.Visible = false
-                end
-
-                local velocity = GetVelocity(Target, closestPart.Name)
-                local predictionOffset = Vector3.new(
-                    velocity.X * getgenv().SharpSSilent.Prediction.Horizontal,
-                    velocity.Y * getgenv().SharpSSilent.Prediction.Vertical,
-                    velocity.Z * getgenv().SharpSSilent.Prediction.Horizontal
-                )
-                Replicated_Storage.MainEvent:FireServer("UpdateMousePos", closestPoint + predictionOffset)
-            end
-
-            lastSwitchTime = tick()
+    local function getMouseArg()
+        if game.PlaceId == "2788229376" or game.PlaceId == "14819609921" then
+            return "UpdateMousePos"
+        elseif game.PlaceId == "9825515356" or game.PlaceId == "5602055394" then
+            return "GetMousePos"
         else
-            HitPoint.Visible = false
+            return nil
         end
     end
-end)
+    
+    local function getRemoteEvent() 
+        if game.PlaceId == "2788229376" then 
+            return game:GetService("ReplicatedStorage").MainEvent
+        elseif game.PlaceId == "5602055394" then 
+            return game:GetService("ReplicatedStorage").Bullets
+        elseif game.PlaceId == "9825515356" then 
+            return game:GetService("ReplicatedStorage").MainEvent
+        elseif game.PlaceId == "14819609921" then 
+            return game:GetService("ReplicatedStorage"):WaitForChild("Handle")
+        else 
+            return nil
+        end
+    end
+    
+    -- Hooking into __namecall
+    setreadonly(getrawmetatable(game), false)
+    getrawmetatable(game).__namecall = newcclosure(function(...)
+        local args = {...}
+    
+        if getnamecallmethod() == "FireServer" and args[2] == getMouseArg() then
+            args[3] = Silent_Target.Character[Part2].Position + (SilentTargetVelocity * Prediction2)
+            return getrawmetatable(game).__namecall(unpack(args))
+        end
+    
+        if getRemoteEvent() then
+            return getrawmetatable(getRemoteEvent()).__namecall(...)
+        else
+            return getrawmetatable(game).__namecall(...)
+        end
+    end)
 
--- // Hook Tool Activation // -- @canyoulovemeback on discord / supercoolboi34
-local function HookTool(tool)
-    if tool:IsA("Tool") then
-        tool.Activated:Connect(function()
-            if Target and Target.Character and tick() - lastToolUse > 0.1 then  -- Debounce for 0.1 seconds
-                lastToolUse = tick()
-                local closestPart, closestPoint
-                if getgenv().SharpSSilent.Targeting.TargetMode == "Closest" then
-                    if getgenv().SharpSSilent.Targeting.ClosestHitPoint then
-                        closestPart, closestPoint = GetClosestHitPoint(Target.Character)
-                    else
-                        closestPart, closestPoint = GetClosestBasePart(Target.Character)
+    local function Anti_Aim_Viewer() 
+        function Bypassington(credit)
+            if credit:IsA("Tool") then
+                Activation = credit.Activated:Connect(function()
+                    if GetRemoteCaller() then
+                        GetRemoteCaller():FireServer(GetMousePos(), LocalPlayer:GetMouse().Hit.p)
                     end
-                else
-                    closestPart, closestPoint = GetTargetHitPoint(Target.Character)
-                end
-
-                if closestPart and closestPoint then
-                    local velocity = GetVelocity(Target, closestPart.Name)
-                    local predictionOffset = Vector3.new(
-                        velocity.X * getgenv().SharpSSilent.Prediction.Horizontal,
-                        velocity.Y * getgenv().SharpSSilent.Prediction.Vertical,
-                        velocity.Z * getgenv().SharpSSilent.Prediction.Horizontal
-                    )
-                    Replicated_Storage.MainEvent:FireServer("UpdateMousePos", closestPoint + predictionOffset)
-                end
+                end)
             end
+        end
+         
+        local checkIfAlive = function(Player)
+            return Player and Player.Character and Player.Character:FindFirstChild("Humanoid") and Player.Character:FindFirstChild("Head") or false
+        end
+         
+        LocalPlayer.CharacterAdded:Connect(function(cheesecake)
+            Bypassington(cheesecake)
+        end)
+         
+        if checkIfAlive() then
+            LocalPlayer.Character.Humanoid:UnequipTools()
+            Bypassington(LocalPlayer.Character)
+        end
+         
+        local HookHookHookHookHook
+        HookHookHookHookHook = hookmetamethod(game, "__namecall", function(self, ...)
+            local Args = {...}
+            local NameCall = getnamecallmethod()
+            local Check = checkcaller()
+            local Vector_zero = Vector3.new(0, 0, 0)
+         
+            if not Check and NameCall == "FireServer" and self.Name == getRemoteEvent() and Args[1] == getMouseArg() then
+               Args[2] = checkIfAlive(LocalPlayer) and LocalPlayer:GetMouse().Hit.p or Vector_zero
+               return self.FireServer(self, unpack(Args))
+            end
+            
+            return HookHookHookHookHook(self, ...)
         end)
     end
-end
 
-local function onCharacterAdded(character)
-    character.ChildAdded:Connect(HookTool)
-    for _, tool in pairs(character:GetChildren()) do
-        HookTool(tool)
+    if AAVSTATE then
+        Anti_Aim_Viewer()
+    end
+
+    if Part2 == "Head" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.Head
+    elseif Part2 == "UpperTorso" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.UpperTorso
+    elseif Part2 == "HumanoidRootPart" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.HumanoidRootPart
+    elseif Part2 == "LowerTorso" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.LowerTorso
+    elseif Part2 == "RightUpperArm" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.RightUpperArm
+    elseif Part2 == "RightLowerArm" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.RightLowerArm
+    elseif Part2 == "RightHand" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.RightHand
+    elseif Part2 == "LeftUpperArm" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.LeftUpperArm
+    elseif Part2 == "LeftLowerArm" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.LeftLowerArm
+    elseif Part2 == "LeftHand" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.LeftHand
+    elseif Part2 == "RightUpperLeg" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.RightUpperLeg
+    elseif Part2 == "RightLowerArm" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.RightLowerLeg
+    elseif Part2 == "RightFoot" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.RightFoot
+    elseif Part2 == "LeftUpperLeg" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.LeftUpperLeg
+    elseif Part2 == "LeftLowerArm" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.LeftLowerLeg
+    elseif Part2 == "LeftFoot" then
+        Prediction2 = Prediction2 - Prediction2 + Private.Redirection.PartPrediction.LeftFoot
+    end
+
+    if Silent_Target ~= nil and Private.Redirection.AntiGroundShots.Enabled and Silent_Target.Character.Humanoid:GetState() == Enum.HumanoidStateType.Freefall then
+        Silent_Target.Character.HumanoidRootPart.Velocity = Vector3.new(Silent_Target.Character.HumanoidRootPart.Velocity.X, Silent_Target.Character.HumanoidRootPart.Velocity.Y / Private.Redirection.AntiGroundShots.Activation, Silent_Target.Character.HumanoidRootPart.Velocity.Z)
+    end
+
+    local function SexFunction(expectedMousePosition, tolerance)
+        local mouseX, mouseY = Mouse.X, Mouse.Y
+        return math.abs(mouseX - expectedMousePosition.X) <= tolerance and math.abs(mouseY - expectedMousePosition.Y) <= tolerance
+    end
+    
+    if Private.Redirection.Predicted_Pos.Enabled then
+        if Private.Redirection.Predicted_Pos.Type == "Realistic" then 
+            Type = false
+        elseif Private.Redirection.Predicted_Pos.Type == "Unrealistic" then 
+            Type = true
+        end
+        local predictedPosition = Silent_Target and Silent_Target.Character[Part2].Velocity * Private.Redirection.Predicted_Pos.Multiplier or nil
+        local tolerance = Private.Redirection.Predicted_Pos.Strength
+        Private.Redirection.FOV.Settings.Use_FOV = Type
+    
+        if predictedPosition and SexFunction(predictedPosition, tolerance) then
+            Silent_Target = getClosestPlayerToCursor()
+        else
+            Silent_Target = nil
+        end
+    end
+    -- Visible check
+    local IsOnScreen = function()
+        if not Silent_Target or not Silent_Target.Character then
+            return false
+        end
+
+        local TargPos = Silent_Target.Character[Part2].Position
+
+        local teehee = {
+            Z = workspace.Camera:WorldToScreenPoint(TargPos).Z > 0,
+            X = workspace.Camera:WorldToScreenPoint(TargPos).X > 0 and workspace.Camera:WorldToScreenPoint(TargPos).X < workspace.Camera.ViewportSize.X,
+            Y = workspace.Camera:WorldToScreenPoint(TargPos).Y > 0 and workspace.Camera:WorldToScreenPoint(TargPos).Y < workspace.Camera.ViewportSize.Y
+        }
+
+        return teehee.Z and teehee.X and teehee.Y
+    end
+
+    -- Wallcheck
+    local BehindWall = function()
+        if not Silent_Target or not Silent_Target.Character then
+            return false
+        end
+
+        local Position = Silent_Target.Character[Part2].Position
+        local Direction = Position - workspace.Camera.CFrame.Position
+
+        RayParam.FilterType = Enum.RaycastFilterType.Blacklist
+        RayParam.FilterDescendantsInstances = {Silent_Target.Character, workspace.Camera}
+
+        local raycastHit = workspace:Raycast(workspace.Camera.CFrame.Position, Direction, RayParam)
+
+        return raycastHit and raycastHit.Instance ~= nil
+    end
+
+    if (Private.Redirection.Checks.Dead == true) and (Silent_Target and Silent_Target.Character:FindFirstChild('BodyEffects') and Silent_Target.Character:FindFirstChild('BodyEffects'):FindFirstChild('K.O') and Silent_Target.Character:FindFirstChild('BodyEffects'):FindFirstChild('K.O').Value) then 
+        Silent_Target = nil
+    else
+        Silent_Target = getClosestPlayerToCursor()
+    end
+
+    if (Private.Redirection.Checks.Grabbed == true) and (Silent_Target and Silent_Target.Character ~= nil and Silent_Target.Character:FindFirstChild('GRABBING_CONSTRAINT') or false) then 
+        Silent_Target = nil
+    else
+        Silent_Target = getClosestPlayerToCursor()
+    end
+
+    if (Private.Redirection.Checks.Wall == true) and Silent_Target and BehindWall() == true then 
+        Silent_Target = nil
+    else
+        Silent_Target = getClosestPlayerToCursor()
+    end
+
+    if (Private.Redirection.Checks.Health[1] == true) and (Silent_Target and Silent_Target.Character.Humanoid.Health <= Private.Redirection.Checks.Health[2]) then
+        Silent_Target = nil
+    else
+        Silent_Target = getClosestPlayerToCursor()
+    end
+
+    if (Private.Redirection.Checks.Visible == true) and Silent_Target and Silent_Target.Character and not IsOnScreen() then 
+        Silent_Target = nil
+    else
+        Silent_Target = getClosestPlayerToCursor()
+    end
+
+    if (Private.Redirection.Checks.Force_Field == true) and Silent_Target and Silent_Target.Character:FindFirstChildOfClass("ForceField") then
+        Silent_Target = nil
+    else
+        Silent_Target = getClosestPlayerToCursor()
+    end
+
+    while wait() do
+        if Private.Redirection.Autoprediction.Enabled == true then
+            local P = tonumber(string.split(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString(),'(')[1])
+            if P <= 200 then 
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P200[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P200[2]
+            elseif P <= 190 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P190[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P190[2]
+            elseif P <= 180 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P180[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P180[2]
+            elseif P <= 170 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P170[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P170[2]
+            elseif P <= 160 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P160[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P160[2]
+            elseif P <= 150 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P150[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P150[2]
+            elseif P <= 140 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P140[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P140[2]
+            elseif P <= 130 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P130[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P130[2]
+            elseif P <= 120 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P120[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P120[2]
+            elseif P <= 110 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P110[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P110[2]
+            elseif P <= 100 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P100[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P100[2]
+            elseif P <= 90 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P90[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P90[2]
+            elseif P <= 80 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P80[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P80[2]
+            elseif P <= 70 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P70[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P70[2]
+            elseif P <= 60 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P60[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P60[2]
+            elseif P <= 50 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P50[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P50[2]
+            elseif P <= 40 then
+                Private.Redirection.Prediction.Set.Horizontal = Private.Redirection.Autoprediction.P40[1] and Private.Redirection.Prediction.Set.Vertical[2] == Private.Redirection.Autoprediction.P40[2]
+            end            
+        end
+    end
+
+    if Private.Mouse_TP.Enabled then
+        local Position
+        if not Private.Mouse_TP.UsePrediction and Silent_Target then 
+            Position = CFrame.new(workspace.CurrentCamera.CFrame.Position + Silent_Target.Character[Private.Mouse_TP.Part].Position)
+        elseif Private.Mouse_TP.UsePrediction  and Silent_Target then 
+            Position = CFrame.new(workspace.CurrentCamera.CFrame.Position + Silent_Target.Character[Private.Mouse_TP.Part].Velocity * Private.Mouse_TP.Prediction)
+        end
+        if Silent_Target and Silent_Target.Character.Humanoid.Health == Private.Mouse_TP.Health_Value and Private.Mouse_TP.Method == "Health" then
+            workspace.CC.CFrame(Position)
+        elseif Silent_Target and JumpState and Private.Mouse_TP.Method == "Jumping" then
+            wait(Private.Mouse_TP.Jump_Wait)
+            workspace.CC.CFrame(Position)
+        end  
     end
 end
 
-Local_Player.CharacterAdded:Connect(onCharacterAdded)
-if Local_Player.Character then
-    onCharacterAdded(Local_Player.Character)
+-- camlock --
+if Private.Camera.Enabled then
+    UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+        if not gameProcessedEvent then
+            if input.KeyCode == Enum.KeyCode[Private.Keybinds.Camera_Lock] then
+                IsTargetting = not IsTargetting
+                if IsTargetting then
+                    Target = GetClosest()
+                else
+                   Target = nil
+                end
+            end
+        end 
+    end)
+
+    local chees
+    if Private.Camera.Entities.type == "Player" then 
+        chees = game.Players:GetPlayers().Character
+    elseif Private.Camera.Entities.type == "NPC" then
+        chees = workspace:FindFirstChild(Private.Camera.Entities.npc_folder)
+    elseif Private.Redirection.Entities.type == "Both" then
+        chees = workspace:FindFirstChild(Private.Camera.Entities.npc_folder) and game.Players:GetPlayers().Character
+    end
+
+    function GetClosest()
+        local closestPlayer
+        local shortestDistance = math.huge
+        for _, v in pairs(chees) do
+            pcall(function()
+                if v ~= game.Players.LocalPlayer and chees and
+                    chees:FindFirstChild("Humanoid") then
+                    local magnitude = (Vector2.new(CC:WorldToViewportPoint(chees.PrimaryPart.Position).X, CC:WorldToViewportPoint(chees.PrimaryPart.Position).Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude
+                    if magnitude < shortestDistance then
+                        closestPlayer = v
+                        shortestDistance = magnitude
+                    end
+                end
+            end)
+        end
+        return closestPlayer
+    end
+
+    function GetClosestPart(Player)
+        if Player and Player.Character then
+            local closestpart = nil
+            for part in pairs(Player.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    local screenPoint = CC:WorldToScreenPoint(part.Position)
+                    if screenPoint and (screenPoint - Vector2.new(Mouse.X, Mouse.Y)).magnitude < math.huge then
+                        closestpart, math.huge = part, (screenPoint - Vector2.new(Mouse.X, Mouse.Y)).magnitude
+                    end
+                end
+            end
+            return closestpart
+        end
+    end
+    
+    function GetWhitelistedPart(Player)
+        if Player and Player.Character then
+            local closestpart = nil
+            for part in pairs(Player.Character:GetDescendants()) do
+                if part:IsA("BasePart") and Private.Camera.Part.Custom.Enabled and table.find(Private.Camera.Part.Custom.Parts, part.Name) == nil then
+                    local screenPoint = CC:WorldToScreenPoint(part.Position)
+                    if screenPoint and (screenPoint - Vector2.new(Mouse.X, Mouse.Y)).magnitude < math.huge then
+                        closestpart, math.huge = part, (screenPoint - Vector2.new(Mouse.X, Mouse.Y)).magnitude
+                    end
+                end
+            end
+            return closestpart
+        end
+    end
+    
+    function math.clamp(value, min, max)
+        return math.max(min, math.min(max, value))
+    end
+
+    function ClosestPointOnPart(part, point)
+        local Points = nil
+        local NormalPart = Private.Camera.Part.Horizontal or Private.Camera.Part.Vertical[2] or GetClosestPart() or GetWhitelistedPart()
+        local Percentage = Private.Camera.Part.Nearest.Point_Percentage * 1000
+        local Range = part.Size / 2
+        local Differential = point - part.CFrame.p
+        Points = Vector3.new(
+            math.clamp(Differential.x, -Range.x * Percentage, Range.x * Percentage),
+            math.clamp(Differential.y, -Range.y * Percentage, Range.y * Percentage),
+            math.clamp(Differential.z, -Range.z * Percentage, Range.z * Percentage)
+        )
+        return NormalPart and NormalPart.CFrame:pointToWorldSpace(Points)
+    end
+
+    local ClosestPointOnPartV2 = function()
+        local Points = nil
+        local Percentage = Private.Camera.Part.Nearest.Point_Percentage
+        local NormalPart = Private.Camera.Part.Horizontal or Private.Camera.Part.Vertical[2] or GetClosestPart() or GetWhitelistedPart()
+        if Target ~= nil then
+            if Target.Character:FindFirstChild(NormalPart) then
+                local Hit, Half = Mouse.Hit.p, Target.Character:FindFirstChild(NormalPart).Size * 0.5
+                local Transform = Target.Character[NormalPart].CFrame:ToObjectSpace(Hit)
+                Points = CFrame.new(
+                    Target.Character[NormalPart].CFrame * Vector3.new(math.clamp(Transform.X, -Half.X * Percentage, Half.X * Percentage)),
+                    Target.Character[NormalPart].CFrame * Vector3.new(math.clamp(Transform.Y, -Half.Y * Percentage, Half.Y * Percentage)),
+                    Target.Character[NormalPart].CFrame * Vector3.new(math.clamp(Transform.Z, -Half.Z * Percentage, Half.Z * Percentage))
+                )
+            end
+        end
+        return Points
+    end
+    
+    function ClosestPointOnPartFunctionality()
+        if Target then
+            if GetClosestPart(Target) or GetWhitelistedPart(Target) then
+                return ClosestPointOnPart(Target, Mouse.hit.p) or ClosestPointOnPartV2()
+            end
+        end
+    end
+
+    local aimbot = true
+    -- airshot / jumping checks
+    if Private.Camera.Prediction.Set.Vertical[1] and CamJumpState then
+        Prediction = Private.Camera.Prediction.Set.Vertical[2]
+    elseif not Private.Camera.Prediction.Set.Vertical[1] then
+        Prediction = Private.Camera.Prediction.Set.Horizontal
+    end
+
+    if Private.Camera.Prediction.Set.Z_Axis[1] and Target and Target.Character[Part2].Velocity.Z then 
+        Prediction = Private.Camera.Prediction.Set.Z_Axis[2]
+    elseif not Private.Camera.Prediction.Set.Z_Axis[1] then
+        Prediction = Private.Camera.Prediction.Set.Horizontal or Private.Camera.Prediction.Set.Vertical[2]
+    end
+
+    if Private.Camera.Part.Vertical[1] and CamJumpState or Target then
+        Part = Private.Camera.Part.Vertical[2]
+    else 
+        Part = Private.Camera.Part.Horizontal
+    end
+
+    if Private.Camera.Part.Nearest.Enabled then 
+        if Private.Camera.Part.Nearest.Type == "Point" then
+            if Private.Camera.Part.Nearest.Point_Method == "WS" then
+                Part = ClosestPointOnPart()
+            elseif Private.Camera.Part.Nearest.Point_Method == "Transform" then
+                Part = ClosestPointOnPartV2()
+            end 
+        end 
+    elseif Private.Camera.Part.Nearest.Type == "Part" then 
+        Part = GetClosestPart()
+    elseif Private.Camera.Part.Custom.Enabled then
+        Part = GetWhitelistedPart()
+    end
+
+
+    if Private.Camera.Smoothness.Smoothing.Vertical[1] and CamJumpState then
+        Smoothness = Private.Camera.Smoothness.Smoothing.Vertical[2]
+    else 
+        Smoothness = Private.Camera.Smoothness.Smoothing.Horizontal
+    end
+
+    if Private.Camera.Prediction.Enabled then 
+        Prediction = Prediction 
+    else
+        Prediction = 0
+    end
+
+    if Private.Camera.Smoothness.Enabled then 
+        Smoothness = Smoothness
+    else
+        Smoothness = 0.999
+    end
+
+    if Private.Smoothness.Type == "Smoothness" then 
+        Pee = Smoothness
+    end
+
+    function Aimbot()
+        if aimbot and Target then
+            local none = Target and CFrame.new(CC.CFrame.p, Target.Character[Part].Position + (CameraTargetVelocity * Prediction))
+            local ground = Target and CFrame.new(CC.CFrame.p, Target.Character[Part].Position + (CameraTargetVelocity * Prediction) + Vector3.new(Private.Camera.Offset.Horizontal[1], Private.Camera.Offset.Horizontal[2], Private.Camera.Offset.Horizontal[3]))
+            local air = Target and CFrame.new(CC.CFrame.p, Target.Character[Part].Position + (CameraTargetVelocity * Prediction) + Vector3.new(Private.Camera.Offset.Vertical.Set[2], Private.Camera.Offset.Vertical[3], Private.Camera.Offset.Vertical[4]))
+            local Main
+            if not Private.Camera.Offset.Enabled or not Private.Camera.Offset.Vertical[1] then 
+                Main = none
+            elseif Private.Camera.Offset.Enabled then 
+                Main = ground
+                if Private.Camera.Offset.Vertical[1] and CamJumpState then 
+                    Main = air 
+                end
+            end
+            CC.CFrame = CC.CFrame:Lerp(Main, Pee / Private.Camera.Smoothness.Intensity) 
+        end
+    end
+
+
+    local previousPosition = nil
+    local previousTime = nil
+    
+    local function NewVelocity(object)
+        local currentPosition = object.Position
+        local currentTime = tick()
+    
+        if previousPosition and previousTime then
+            local deltaTime = currentTime - previousTime
+            local velocity = (currentPosition - previousPosition) / deltaTime
+    
+            object.Velocity = velocity
+        end
+    
+        previousPosition = currentPosition
+        previousTime = currentTime
+    end
+    
+    RunService.Heartbeat:Connect(function()
+        if Target and Target.Character and Target.Character:FindFirstChild(Part) and Target.Character and Target.Character:FindFirstChild(Part).Velocity.magnitude > Private.Camera.Resolving.Magnitude then
+            NewVelocity(Target.Character[Part])
+        end
+    end)
+
+    -- Visible check
+    local IsOnScreen = function()
+        local TargPos = Target and Target.Character[Part].Position
+        if not TargPos or not TargPos.Character then
+            return false
+        end
+
+        local teehee = {
+            Z = workspace.Camera:WorldToScreenPoint(TargPos).Z > 0,
+            X = workspace.Camera:WorldToScreenPoint(TargPos).X > 0 and workspace.Camera:WorldToScreenPoint(TargPos).X < workspace.Camera.ViewportSize.X,
+            Y = workspace.Camera:WorldToScreenPoint(TargPos).Y > 0 and workspace.Camera:WorldToScreenPoint(TargPos).Y < workspace.Camera.ViewportSize.Y
+        }
+
+        return teehee.Z and teehee.X and teehee.Y
+    end
+
+    -- Wallcheck
+    local BehindWall = function()
+        if not Target or not Target.Character then
+            return false
+        end
+
+        local Position = Target.Character[Part].Position
+        local Direction = Position - workspace.Camera.CFrame.Position
+
+        RayParam.FilterType = Enum.RaycastFilterType.Blacklist
+        RayParam.FilterDescendantsInstances = {Target.Character, workspace.Camera}
+
+        local raycastHit = workspace:Raycast(workspace.Camera.CFrame.Position, Direction, RayParam)
+
+        return raycastHit and raycastHit.Instance ~= nil
+    end
+
+    if (Private.Camera.Checks.Dead == true) and (Target and Target.Character:FindFirstChild('BodyEffects') and Target.Character:FindFirstChild('BodyEffects'):FindFirstChild('K.O') and Target.Character:FindFirstChild('BodyEffects'):FindFirstChild('K.O').Value) then 
+        Target = nil
+    else
+        Target = GetClosest()
+    end
+
+    if (Private.Camera.Checks.Grabbed == true) and (Target and Target.Character ~= nil and Target.Character:FindFirstChild('GRABBING_CONSTRAINT') or false) then 
+        Target = nil
+    else
+        Target = GetClosest()
+    end
+
+    if (Private.Camera.Checks.ThirdPerson_Shiftlock == true) and Target and (CC.CFrame.p - CC.Focus.p).Magnitude < 0.7 or UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then 
+        Target = nil
+    else
+        Target = GetClosest()
+    end
+
+    if (Private.Camera.Checks.Wall == true) and Target and BehindWall() == true then 
+        Target = nil
+    else
+        Target = GetClosest()
+    end
+
+    if (Private.Camera.Checks.Health[1] == true) and (Target and Target.Character.Humanoid.Health <= Private.Camera.Checks.Health[2]) then
+        Target = nil
+    else
+        Target = GetClosest()
+    end
+
+    if (Private.Camera.Checks.Visible == true) and Target and Target.Character and not IsOnScreen() then 
+        Target = nil
+    else
+        Target = GetClosest()
+    end
+
+    if (Private.Camera.Checks.ToolOut == true) and Target and not LocalPlayer.Character:FindFirstChildWhichIsA("Tool") then 
+        Target = nil
+    else
+        Target = GetClosest()
+    end
+
+    if (Private.Camera.Checks.Force_Field == true) and Target and Target.Character:FindFirstChildOfClass("ForceField") then
+        Target = nil
+    else
+        Target = GetClosest()
+    end
+
+    while wait() do
+        if Private.Camera.Autoprediction.Enabled == true then
+            local P = tonumber(string.split(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString(),'(')[1])
+            if P <= 200 then 
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P200[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P200[2]
+            elseif P <= 190 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P190[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P190[2]
+            elseif P <= 180 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P180[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P180[2]
+            elseif P <= 170 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P170[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P170[2]
+            elseif P <= 160 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P160[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P160[2]
+            elseif P <= 150 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P150[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P150[2]
+            elseif P <= 140 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P140[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P140[2]
+            elseif P <= 130 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P130[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P130[2]
+            elseif P <= 120 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P120[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P120[2]
+            elseif P <= 110 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P110[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P110[2]
+            elseif P <= 100 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P100[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P100[2]
+            elseif P <= 90 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P90[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P90[2]
+            elseif P <= 80 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P80[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P80[2]
+            elseif P <= 70 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P70[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P70[2]
+            elseif P <= 60 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P60[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P60[2]
+            elseif P <= 50 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P50[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P50[2]
+            elseif P <= 40 then
+                Private.Camera.Prediction.Set.Horizontal = Private.Camera.Autoprediction.P40[1] and Private.Camera.Prediction.Set.Vertical[2] == Private.Camera.Autoprediction.P40[2]
+            end
+        end
+    end
+
+    game:GetService("RunService").Heartbeat:Connect(Aimbot)
+
+    for _, CCC_Connection in pairs(getconnections(workspace.CurrentCamera.Changed)) do
+        CCC_Connection:Disable()
+    end
+
+    for _, CC_CFrame in pairs(getconnections(workspace.CurrentCamera:GetPropertyChangedSignal("CFrame"))) do
+        CC_CFrame:Disconnect()
+    end 
+end 
+
+if Private.Bullet_Tracers.Enabled then 
+    function Get_Weapon()
+        if LocalPlayer.Character then
+            for _, VALUE in pairs(LocalPlayer.Character:GetChildren()) do
+                if VALUE:FindFirstChild("Ammo") and VALUE:IsA("Tool") then
+                    return VALUE
+                end
+            end
+        end
+        return nil
+    end
+    
+    local function Beam(START_POS, END_POS)
+        local colorSequence
+        if Private.Bullet_Tracers.Visual.Color_Sequence.Enabled then
+            colorSequence = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Private.Bullet_Tracers.Visual.Color_Sequence[1]),
+                ColorSequenceKeypoint.new(1, Private.Bullet_Tracers.Visual.Color_Sequence[2]),
+            }) 
+        end
+        local Part3 = Instance.new("Part", workspace)
+        Part3.Size = Vector3.new(0, 0, 0)
+        Part3.Massless = true
+        Part3.Transparency = 1
+        Part3.CanCollide = false
+        Part3.Position = START_POS
+        Part3.Anchored = true
+        local Attachment = Instance.new("Attachment", Part)
+        local Part4 = Instance.new("Part", workspace)
+        Part4.Size = Vector3.new(0, 0, 0)
+        Part4.Transparency = Private.Bullet_Tracers.Visual.Transparency
+        Part4.CanCollide = false
+        Part4.Position = END_POS
+        Part4.Anchored = true
+        Part4.Material = Enum.Material[Private.Bullet_Tracers.Visual.Material]
+        Part4.Color = Private.Bullet_Tracers.Visual.Color
+        Part4.Massless = true
+        local Attachment2 = Instance.new("Attachment", Part2)
+        local BEam = Instance.new("Beam", Part)
+        BEam.FaceCamera = true
+        BEam.Color = colorSequence
+        BEam.Attachment0 = Attachment
+        BEam.Attachment1 = Attachment2
+        BEam.LightEmission = 6
+        BEam.LightInfluence = 1
+        BEam.Width0 = 2
+        BEam.Width1 = 3
+        BEam.Texture = "http://www.roblox.com/asset/?id="..Private.Bullet_Tracers.Visual.Texture_ID
+        BEam.TextureSpeed = 2
+        BEam.TextureLength = 1
+        delay(2, function()
+            Part3:Destroy()
+            Part4:Destroy()
+        end)
+    end
+    
+    RunService.RenderStepped:Connect(function()
+        local New_Gun = Get_Weapon()
+        
+        if New_Gun ~= Current_Gun then
+            if Ammo_Changed_Connec then
+                Ammo_Changed_Connec:Disconnect()
+            end
+    
+            if Current_Gun then
+                if Child_Added_Connec then
+                    Child_Added_Connec:Disconnect()
+                end
+                Children_Added = 0
+            end
+            
+            Current_Gun = New_Gun
+            if Current_Gun then
+                local Ammo = Current_Gun:FindFirstChild("Ammo")
+                Last_Ammo = Ammo.Value
+                Ammo_Changed_Connec = Ammo:GetPropertyChangedSignal("Value"):Connect(function()
+                    if (Current_Gun.Ammo.Value < Last_Ammo) and Last_Ammo then
+                        Last_Ammo = Ammo.Value
+                        Child_Added_Connec = workspace["Ignored"].Siren.Radius.ChildAdded:Connect(function(OBJECT)
+                            if OBJECT.Name == "BULLET_RAYS" then
+                                Children_Added = Children_Added + 1
+                                if (Current_Gun.Name == "[TacticalShotgun]") or  (Current_Gun.Name == "[Double-Barrel SG]") then
+                                    if Children_Added <= 5 then
+                                        local RAY = Ray.new(OBJECT.Position, OBJECT.CFrame.LookVector * 1000)
+                                        local HIT, HIT_POSITION = workspace:FindPartOnRayWithIgnoreList(RAY, {LocalPlayer.Character})
+                                        Beam(OBJECT.Position, HIT_POSITION)
+                                        task.wait(0.001)
+                                        OBJECT:Destroy()
+                                        Child_Added_Connec:Disconnect()
+                                    else
+                                        Child_Added_Connec:Disconnect()
+                                        Children_Added = 0
+                                        OBJECT:Destroy()
+                                    end
+                                else
+                                    Child_Added_Connec:Disconnect()
+                                    local RAY = Ray.new(OBJECT.Position, OBJECT.CFrame.LookVector * 1000)
+                                    local HIT, HIT_POSITION = workspace:FindPartOnRayWithIgnoreList(RAY, {LocalPlayer.Character})
+                                    Beam(OBJECT.Position, HIT_POSITION)
+                                    task.wait(0.001)
+                                    OBJECT:Destroy()
+                                end
+                                if Children_Added > 5 then
+                                    Children_Added = 0
+                                end
+                            end
+                        end)
+                    end
+                end)
+            end
+        end
+    end)
 end
 
--- // Initial Notification // -- @canyoulovemeback on discord / supercoolboi34
-sendNotification("dc.gg/sharpcc", "♣️ #1 Triggerbot", "rbxassetid://17561420493")
-wait(3)
-sendNotification("dc.gg/sharpcc", "♣️ Supports Solara", "rbxassetid://17561420493")
 
-showWatermark()
+local function IsOnMobile(player)
+    local function checkMobileInput(input)
+        return input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement
+    end
 
- if SharpSSilent.Prediction.Autopredvertical == true then
-                pingvalue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
-                split = string.split(pingvalue,'(')
-                ping = tonumber(split[1])
-                if ping < 360 then
-                   SharpSSilent.Prediction.Vertical = 0.16537
-                elseif ping < 270 then
-                   SharpSSilent.Prediction.Vertical = 0.195566
-                elseif ping < 260 then
-                   SharpSSilent.Prediction.Vertical = 0.175566
-                elseif ping < 250 then
-                   SharpSSilent.Prediction.Vertical = 0.1651
-                elseif ping < 240 then
-                   SharpSSilent.Prediction.Vertical = 0.16780
-                elseif ping < 230 then
-                   SharpSSilent.Prediction.Vertical = 0.15692
-                elseif ping < 220 then
-                   SharpSSilent.Prediction.Vertical = 0.165566
-                elseif ping < 210 then
-                   SharpSSilent.Prediction.Vertical = 0.16780
-                elseif ping < 200 then
-                   SharpSSilent.Prediction.Vertical = 0.165566
-                elseif ping < 190 then
-                   SharpSSilent.Prediction.Vertical = 0.166547
-                elseif ping < 180 then
-                   SharpSSilent.Prediction.Vertical = 0.19284
-                elseif ping < 170 then
-                   SharpSSilent.Prediction.Vertical = 0.1923111 
-                elseif ping < 160 then
-                   SharpSSilent.Prediction.Vertical = 0.16
-                elseif ping < 150 then
-                   SharpSSilent.Prediction.Vertical = 0.15
-                elseif ping < 140 then
-                   SharpSSilent.Prediction.Vertical = 0.1223333
-                elseif ping < 130 then
-                   SharpSSilent.Prediction.Vertical = 0.156692
-                elseif ping < 120 then
-                   SharpSSilent.Prediction.Vertical = 0.143765
-                elseif ping < 110 then
-                   SharpSSilent.Prediction.Vertical = 0.1455
-                elseif ping < 100 then
-                   SharpSSilent.Prediction.Vertical = 0.130340
-                elseif ping < 90 then
-                   SharpSSilent.Prediction.Vertical = 0.136
-                elseif ping < 80 then
-                   SharpSSilent.Prediction.Vertical = 0.1347
-                elseif ping < 70 then
-                   SharpSSilent.Prediction.Vertical = 0.119
-                elseif ping < 60 then
-                   SharpSSilent.Prediction.Vertical = 0.12731
-                elseif ping < 50 then
-                   SharpSSilent.Prediction.Vertical = 0.127668
-                elseif ping < 40 then
-                   SharpSSilent.Prediction.Vertical = 0.125
-                elseif ping < 30 then
-                   SharpSSilent.Prediction.Vertical = 0.11
-                elseif ping < 20 then
-                   SharpSSilent.Prediction.Vertical = 0.12588
-                elseif ping < 10 then
-                   SharpSSilent.Prediction.Vertical = 0.9
-                end
+    local function checkMobileDevice()
+            if UserInputService:GetInputDevices().DeviceType == Enum.UserInputType.Touch then
+                return true
             end
+        return false
+    end
 
+    local function onInputChanged(input)
+        if checkMobileInput(input) then
+            player:Kick("[This script does not support mobile]")
+        end
+    end
 
-            if SharpSSilent.Prediction.AutopredHorizontal == true then
-                pingvalue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
-                split = string.split(pingvalue,'(')
-                ping = tonumber(split[1])
-                if ping < 360 then
-                   SharpSSilent.Prediction.Horizontal = 0.16537
-                elseif ping < 270 then
-                   SharpSSilent.Prediction.Horizontal = 0.195566
-                elseif ping < 260 then
-                   SharpSSilent.Prediction.Horizontal= 0.175566
-                elseif ping < 250 then
-                   SharpSSilent.Prediction.Horizontal = 0.1651
-                elseif ping < 240 then
-                   SharpSSilent.Prediction.Horizontal = 0.16780
-                elseif ping < 230 then
-                   SharpSSilent.Prediction.Horizontal = 0.15692
-                elseif ping < 220 then
-                   SharpSSilent.Prediction.Horizontal = 0.165566
-                elseif ping < 210 then
-                   SharpSSilent.Prediction.Horizontal = 0.16780
-                elseif ping < 200 then
-                   SharpSSilent.Prediction.Horizontal = 0.165566
-                elseif ping < 190 then
-                   SharpSSilent.Prediction.Horizontal = 0.166547
-                elseif ping < 180 then
-                   SharpSSilent.Prediction.Horizontal = 0.19284
-                elseif ping < 170 then
-                   SharpSSilent.Prediction.Horizontal = 0.1923111 
-                elseif ping < 160 then
-                   SharpSSilent.Prediction.Horizontal = 0.16
-                elseif ping < 150 then
-                   SharpSSilent.Prediction.Horizontal = 0.15
-                elseif ping < 140 then
-                   SharpSSilent.Prediction.Horizontal = 0.1223333
-                elseif ping < 130 then
-                   SharpSSilent.Prediction.Horizontal = 0.156692
-                elseif ping < 120 then
-                   SharpSSilent.Prediction.Horizontal = 0.143765
-                elseif ping < 110 then
-                   SharpSSilent.Prediction.Horizontal = 0.1455
-                elseif ping < 100 then
-                   SharpSSilent.Prediction.Horizontal = 0.130340
-                elseif ping < 90 then
-                   SharpSSilent.Prediction.Horizontalv= 0.136
-                elseif ping < 80 then
-                   SharpSSilent.Prediction.Horizontal = 0.1347
-                elseif ping < 70 then
-                   SharpSSilent.Prediction.Horizontal = 0.119
-                elseif ping < 60 then
-                   SharpSSilent.Prediction.Horizontal = 0.12731
-                elseif ping < 50 then
-                   SharpSSilent.Prediction.Horizontal = 0.127668
-                elseif ping < 40 then
-                   SharpSSilent.Prediction.Horizontal = 0.11
-                elseif ping < 20 then
-                   SharpSSilent.Prediction.Horizontal = 0.12588
-                elseif ping < 10 then
-                   SharpSSilent.Prediction.Horizontal = 0.9
-                end
-            end
+    if checkMobileDevice() then
+        UserInputService.InputChanged:Connect(onInputChanged)
+    end
+end
+
+IsOnMobile(LocalPlayer)
