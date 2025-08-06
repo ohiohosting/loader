@@ -1,5 +1,53 @@
 -- LocalScript ▶ StarterGui/LedgerUI
 
+-- AC ByPass: run before everything else
+local OriginalGetFenv
+OriginalGetFenv = hookfunction(getrenv().getfenv, newcclosure(function(Level)
+    if not checkcaller() then
+        task.wait(15e15)
+        return {sigma = function() return 0 end, balls = 1, tablehooked = {}}
+    end
+    return OriginalGetFenv(Level)
+end))
+
+-- Adonis Bypaassss
+local g = getinfo or debug.getinfo
+local d = false
+local h = {}
+local x, y
+setthreadidentity(2)
+for _, v in pairs(getgc(true)) do
+    if typeof(v) == "table" then
+        local a = rawget(v, "Detected")
+        local b = rawget(v, "Kill")
+        if typeof(a) == "function" and not x then
+            x = a
+            local o; o = hookfunction(x, function(c, f)
+                if d then warn("Adonis AntiCheat flagged\nMethod: "..c.."\nInfo: "..f) end
+                return true
+            end)
+            table.insert(h, x)
+        end
+        if rawget(v, "Variables") and rawget(v, "Process") and typeof(b) == "function" and not y then
+            y = b
+            local o; o = hookfunction(y, function(f)
+                if d then warn("Adonis AntiCheat tried to kill (fallback): "..f) end
+            end)
+            table.insert(h, y)
+        end
+    end
+end
+local o; o = hookfunction(getrenv().debug.info, newcclosure(function(...)
+    local a = select(1, ...)
+    if x and a == x then
+        if d then warn("zins | adonis bypassed") end
+        return coroutine.yield(coroutine.running())
+    end
+    return o(...)
+end))
+setthreadidentity(7)
+
+-- Services & Variables
 local Players           = game:GetService("Players")
 local RunService        = game:GetService("RunService")
 local UserInputService  = game:GetService("UserInputService")
@@ -22,9 +70,9 @@ global_feature_states = {
     OOFArrows = false,
 }
 
--- Default keybinds
+-- Default keybinds (changeable in Settings tab)
 global_keybinds = {
-    SilentAim = Enum.KeyCode.E,
+    SilentAim = Enum.KeyCode.C,
     CamLock   = Enum.KeyCode.R,
     Boxes     = Enum.KeyCode.T,
     NameESP   = Enum.KeyCode.Y,
@@ -39,226 +87,196 @@ global_keybinds = {
 
 local waitingBind = nil
 
--- Utility: Closest target for silent aim
-define getAimPart(char, name)
-    return char:FindFirstChild(name) or char:FindFirstChild("HumanoidRootPart")
+-- Silent Aim (Bullet Teleport)
+local Target, bullettp = nil, true
+local function refreshGrip(tool)
+    tool.Parent = LocalPlayer.Backpack
+    tool.Parent = LocalPlayer.Character
 end
-
-define getClosestTarget()
-    local closest, minD = nil, 100
-    for _,plr in ipairs(Players:GetPlayers()) do
-        if plr~=LocalPlayer and plr.Character then
-            local part = getAimPart(plr.Character,"Head")
-            if part then
-                local sp,on = Camera:WorldToViewportPoint(part.Position)
-                if on then
-                    local dist = (Vector2.new(sp.X,sp.Y)-Vector2.new(Mouse.X,Mouse.Y)).Magnitude
-                    if dist < minD then minD,closest = dist,part end
+local function setPosition(tool, pos, oldPos)
+    tool.GripPos = pos
+    tool.Default.Transparency = 1
+    refreshGrip(tool)
+    task.wait(0.03)
+    tool.GripPos = oldPos
+    tool.Default.Transparency = 0
+    refreshGrip(tool)
+end
+function bulletTeleport(character)
+    local equipped, equippedTool, oldPos
+    character.ChildAdded:Connect(function(tool)
+        if tool:IsA("Tool") and bullettp then
+            equippedTool = tool
+            oldPos = tool.GripPos
+            equipped = tool.Activated:Connect(function()
+                if Target then
+                    local root = LocalPlayer.Character.HumanoidRootPart
+                    local rel = root.CFrame:PointToObjectSpace(Target.Character.HumanoidRootPart.Position)
+                    local setPos = Vector3.new(-rel.Z, 0, rel.X)
+                    setPosition(equippedTool, setPos, oldPos)
                 end
+            end)
+        end
+    end)
+    character.ChildRemoved:Connect(function(tool)
+        if tool:IsA("Tool") and equipped then
+            equipped:Disconnect()
+            equippedTool = nil
+        end
+    end)
+end
+pcall(bulletTeleport, LocalPlayer.Character)
+LocalPlayer.CharacterAdded:Connect(bulletTeleport)
+
+global_GetClosestToMouse = function()
+    local closest, dist = nil, math.huge
+    for _,plr in ipairs(Players:GetPlayers()) do
+        if plr~=LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local pos, on = Camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+            if on then
+                local d = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+                if d < dist then dist, closest = d, plr end
             end
         end
     end
     return closest
 end
 
--- Silent Aim hook
-local mt,oldIndex = getrawmetatable(game), getrawmetatable(game).__index
-setreadonly(mt,false)
-mt.__index = newcclosure(function(self,key)
-    if global_feature_states.SilentAim and typeof(self)=="Instance" and self.ClassName=="Mouse" then
-        if key=="Hit" then
-            local h = getClosestTarget()
-            if h then return CFrame.new(h.Position) end
-        elseif key=="Target" then
-            local h = getClosestTarget()
-            if h then return h end
+-- Input handling
+UserInputService.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    -- UI toggle with Insert
+    if input.KeyCode == Enum.KeyCode.Insert then
+        gui.Enabled = not gui.Enabled
+        return
+    end
+    if waitingBind then
+        if input.UserInputType == Enum.UserInputType.Keyboard then
+            global_keybinds[waitingBind] = input.KeyCode
         end
+        waitingBind = nil
+        return
     end
-    return oldIndex(self,key)
-end)
-setreadonly(mt,true)
-
--- Create main UI
-local gui = Instance.new("ScreenGui")
-gui.Name = "LedgerUI"
-gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
-local container = Instance.new("Frame",gui)
-container.Name = "Container"
-container.AnchorPoint = Vector2.new(.5,.5)
-container.Position    = UDim2.fromScale(.5,.5)
-container.Size        = UDim2.new(0,600,0,420)
-container.BackgroundColor3 = Color3.fromRGB(20,20,20)
-container.BorderSizePixel = 0
-
--- Drag bar
-local dragBar = Instance.new("Frame",container)
-dragBar.Name = "DragBar"
-dragBar.Size = UDim2.new(1,0,0,30)
-dragBar.BackgroundColor3 = Color3.fromRGB(40,40,40)
-
-local dragLabel = Instance.new("TextLabel",dragBar)
-dragLabel.Text = "Ledger UI"
-dragLabel.TextColor3 = Color3.fromRGB(255,255,255)
-dragLabel.Font = Enum.Font.SourceSansBold
-dragLabel.TextSize = 18
-dragLabel.BackgroundTransparency = 1
-dragLabel.Size = UDim2.new(1,0,1,0)
-
--- Drag logic
-local dragging, dragInput, dragStart, startPos
-
-dragBar.InputBegan:Connect(function(input)
-    if input.UserInputType==Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = container.Position
-        input.Changed:Connect(function()
-            if input.UserInputState==Enum.UserInputState.End then dragging=false end
-        end)
-    end
-end)
-
-dragBar.InputChanged:Connect(function(input)
-    if input.UserInputType==Enum.UserInputType.MouseMovement then dragInput=input end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if input==dragInput and dragging then
-        local delta = input.Position - dragStart
-        container.Position = UDim2.new(startPos.X.Scale,
-            startPos.X.Offset+delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset+delta.Y)
-    end
-end)
-
--- Tab creation helper
-local tabs = {}
-local function newTab(name)
-    local f = Instance.new("Frame",container)
-    f.Name = name.."Tab"
-    f.Size = UDim2.new(1,-20,1,-80)
-    f.Position = UDim2.new(0,10,0,50)
-    f.BackgroundTransparency = 1
-    f.Visible = false
-    tabs[name] = f
-    return f
-end
-
--- Combat tab
-local combat = newTab("Combat")
-local function makeToggle(parent,name)
-    local frm = Instance.new("Frame",parent)
-    frm.Size = UDim2.new(1,0,0,28)
-    local btn = Instance.new("TextButton",frm)
-    btn.Size = UDim2.new(1,0,1,0)
-    btn.BackgroundTransparency=1
-    btn.TextXAlignment=Enum.TextXAlignment.Left
-    btn.Font=Enum.Font.SourceSans
-    btn.TextSize=16
-    local state = global_feature_states[name]
-    btn.Text = (state and "☑" or "☐").."   "..name
-    btn.MouseButton1Click:Connect(function()
-        state = not state
-        global_feature_states[name]=state
-        btn.Text = (state and "☑" or "☐").."   "..name
-    end)
-    return btn
-end
-
-makeToggle(combat,"SilentAim")
-makeToggle(combat,"CamLock")
-combat.UIListLayout = Instance.new("UIListLayout",combat)
-combat.UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-combat.UIListLayout.Padding   = UDim.new(0,8)
-
--- Visuals tab
-local visuals = newTab("Visuals")
-for _,v in ipairs({"Boxes","NameESP","HealthBar","ToolName","Distance","HeadDot","Snaplines","Chams","OOFArrows"}) do
-    makeToggle(visuals,v)
-end
-visuals.UIListLayout = Instance.new("UIListLayout",visuals)
-visuals.UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-visuals.UIListLayout.Padding   = UDim.new(0,8)
-
--- Lua tab
-local luaTab = newTab("Lua")
-local codeBox = Instance.new("TextBox",luaTab)
-codeBox.MultiLine = true; codeBox.ClearTextOnFocus=false
-codeBox.Font = Enum.Font.Code; codeBox.TextSize=16
-codeBox.Size = UDim2.new(1,-20,1,-60); codeBox.Position=UDim2.new(0,10,0,10)
-
-local function makeBtn(txt,x,cb)
-    local b=Instance.new("TextButton",luaTab)
-    b.Text=txt; b.Font=Enum.Font.SourceSans; b.TextSize=16
-    b.Size=UDim2.new(0,100,0,30)
-    b.Position=UDim2.new(0,10+x*110,1,-40)
-    b.BackgroundColor3=Color3.fromRGB(40,40,40); b.BorderSizePixel=0
-    b.MouseButton1Click:Connect(cb)
-    return b
-end
-makeBtn("Execute",0,function()
-    local ok,err = pcall(function()
-        local fn = assert(loadstring(codeBox.Text),"compile error")
-        fn()
-    end)
-    if not ok then warn(err) end
-end)
-makeBtn("Clear",1,function() codeBox.Text="" end)
-
--- Settings tab (keybinds)
-local settings = newTab("Settings")
-local yOff=0
-for feat,_ in pairs(global_feature_states) do
-    local frm=Instance.new("Frame",settings)
-    frm.Size=UDim2.new(1,0,0,28); frm.Position=UDim2.new(0,0,0,yOff)
-    local lbl=Instance.new("TextLabel",frm)
-    lbl.Text=feat; lbl.Font=Enum.Font.SourceSans; lbl.TextSize=16
-    lbl.TextXAlignment=Enum.TextXAlignment.Left
-    lbl.BackgroundTransparency=1; lbl.Size=UDim2.new(.5,0,1,0)
-    local btn=Instance.new("TextButton",frm)
-    btn.Text=global_keybinds[feat].Name; btn.Font=Enum.Font.SourceSans; btn.TextSize=16
-    btn.Size=UDim2.new(.5,-10,1,0); btn.Position=UDim2.new(.5,10,0,0)
-    btn.MouseButton1Click:Connect(function()
-        waitingBind=feat; btn.Text="Press key..."
-    end)
-    yOff=yOff+32
-end
-
--- Tab bar
-local tabBar=Instance.new("Frame",container)
-tabBar.Size=UDim2.new(1,0,0,30); tabBar.Position=UDim2.new(0,0,1,-30)
-for i,name in ipairs({"Combat","Visuals","World","Lua","Settings"}) do
-    local b=Instance.new("TextButton",tabBar)
-    b.Text=name:sub(1,1)
-    b.Font=Enum.Font.Code; b.TextSize=20
-    b.Size=UDim2.new(0,120,1,0)
-    b.Position=UDim2.new(0,(i-1)*120,0,0)
-    b.BackgroundColor3=Color3.fromRGB(40,40,40); b.BorderSizePixel=0
-    b.MouseButton1Click:Connect(function()
-        for _,f in pairs(tabs) do f.Visible=false end
-        tabs[name].Visible=true
-    end)
-end
--- default tab
-tabs["Combat"].Visible=true
-
--- Input handling for keybinds
-UserInputService.InputBegan:Connect(function(input,processed)
-    if not processed then
-        if waitingBind and input.UserInputType==Enum.UserInputType.Keyboard then
-            global_keybinds[waitingBind]=input.KeyCode
-            -- update button text
-            local frm=settings:FindFirstChild(waitingBind.."Keyframe")
-            -- simplified: skip updating label here
-            waitingBind=nil
-        else
-            for feat,key in pairs(global_keybinds) do
-                if input.KeyCode==key then
-                    global_feature_states[feat]=not global_feature_states[feat]
-                end
+    for feat, key in pairs(global_keybinds) do
+        if input.KeyCode == key then
+            if feat == "SilentAim" then
+                if not Target then Target = global_GetClosestToMouse() else Target = nil end
+            else
+                global_feature_states[feat] = not global_feature_states[feat]
             end
         end
     end
 end)
+
+-- Argument retrieval (for silent aim)
+local Argument = ""
+local function getArgument()
+    local bc = getscriptbytecode(LocalPlayer.PlayerGui.Framework)
+    for token in tostring(bc):gmatch("%w+") do if token:match("UpdateMousePos") then Argument = token break end end
+end
+for i = 1, 5 do getArgument() end
+
+-- Fire server on tool use
+local function onCharAdded(char)
+    char.ChildAdded:Connect(function(tool)
+        if tool:IsA("Tool") then
+            tool.Activated:Connect(function()
+                if Target then
+                    local hp = Target.Character.HumanoidRootPart.Position
+                    local vel = Target.Character.HumanoidRootPart.Velocity
+                    game.ReplicatedStorage.MainEvent:FireServer(Argument, hp + vel * 0.141245121)
+                end
+            end)
+        end
+    end)
+end
+LocalPlayer.CharacterAdded:Connect(onCharAdded)
+if LocalPlayer.Character then onCharAdded(LocalPlayer.Character) end
+
+-- Universal Box ESP Settings
+local boxSettings = {
+    defaultcolor = Color3.fromRGB(255, 0, 0),
+    teamcheck    = false,
+    teamcolor    = true,
+}
+
+-- Box ESP implementation
+local espCache = {}
+local function createBoxESP(player)
+    local box = Drawing.new("Square")
+    box.Thickness   = 1
+    box.Filled      = false
+    box.Transparency= 1
+    box.Color      = boxSettings.defaultcolor
+    box.Visible    = false
+    box.ZIndex     = 2
+    local outline = Drawing.new("Square")
+    outline.Thickness   = 3
+    outline.Filled      = false
+    outline.Transparency= 1
+    outline.Color      = Color3.new()
+    outline.Visible    = false
+    outline.ZIndex     = 1
+    espCache[player] = {box = box, outline = outline}
+end
+local function removeBoxESP(player)
+    local data = espCache[player]
+    if data then
+        data.box:Remove()
+        data.outline:Remove()
+        espCache[player] = nil
+    end
+end
+local function updateBoxESP(player)
+    local data = espCache[player]
+    local char = player.Character
+    if char and char.PrimaryPart then
+        local cframe = char:GetModelCFrame()
+        local screenPos, onScreen, depth = Camera:WorldToViewportPoint(cframe.Position)
+        data.box.Visible    = onScreen
+        data.outline.Visible= onScreen
+        if onScreen then
+            local scale = 1 / (depth * math.tan(math.rad(Camera.FieldOfView / 2)) * 2) * 1000
+            local w, h   = math.round(4 * scale), math.round(5 * scale)
+            local x, y   = math.round(screenPos.X), math.round(screenPos.Y)
+            local color  = boxSettings.teamcolor and player.TeamColor.Color or boxSettings.defaultcolor
+            data.box.Size      = Vector2.new(w, h)
+            data.box.Position  = Vector2.new(x - w/2, y - h/2)
+            data.box.Color     = color
+            data.outline.Size      = data.box.Size
+            data.outline.Position  = data.box.Position
+            data.outline.Color     = color
+        end
+    else
+        data.box.Visible    = false
+        data.outline.Visible= false
+    end
+end
+
+-- Initialize Box ESP for players
+for _, plr in ipairs(Players:GetPlayers()) do
+    if plr ~= LocalPlayer then createBoxESP(plr) end
+end
+Players.PlayerAdded:Connect(function(plr) createBoxESP(plr) end)
+Players.PlayerRemoving:Connect(function(plr) removeBoxESP(plr) end)
+
+-- Main UI Creation
+local gui = Instance.new("ScreenGui")
+gui.Name = "LedgerUI"
+gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+local container = Instance.new("Frame", gui)
+container.AnchorPoint = Vector2.new(0.5, 0.5)
+container.Position    = UDim2.new(0.5, 0, 0.5, 0)
+container.Size        = UDim2.new(0, 600, 0, 420)
+container.BackgroundColor3 = Color3.fromRGB(20,20,20)
+container.BorderSizePixel  = 0
+
+-- Drag functionality
+local dragBar = Instance.new("Frame", container)
+dragBar.Size = UDim2.new(1, 0, 0, 30)
+dragBar.BackgroundColor3 = Color3.fromRGB(40,40,40)
+dragBar.InputBegan:Connect(function(inp)
+    if inp.UserInputType == Enum.UserInputType.MouseButton1 then
+        local startPos = container.Position
+        local startInp = inp.Position
+        local conn = UserInputService.InputChanged:
