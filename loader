@@ -1,1 +1,264 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/yuvic123/SKIDO-V3/refs/heads/main/%40Siom4i_"))()
+-- LocalScript ▶ StarterGui/LedgerGUI
+
+local Players    = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer= Players.LocalPlayer
+local Camera     = workspace.CurrentCamera
+local Mouse      = LocalPlayer:GetMouse()
+
+-- feature flags
+local silentAimEnabled   = false
+local camLockEnabled     = false
+local skeletonESPEnabled = false
+local aimFOV             = 100
+
+-- ESP setup
+local Drawing = Drawing
+local espLines = {}
+local bonePairs = {
+    {"Head","UpperTorso"}, {"UpperTorso","LowerTorso"},
+    {"LowerTorso","RightUpperLeg"},{"RightUpperLeg","RightLowerLeg"},{"RightLowerLeg","RightFoot"},
+    {"LowerTorso","LeftUpperLeg"},{"LeftUpperLeg","LeftLowerLeg"},{"LeftLowerLeg","LeftFoot"},
+    {"UpperTorso","RightUpperArm"},{"RightUpperArm","RightLowerArm"},{"RightLowerArm","RightHand"},
+    {"UpperTorso","LeftUpperArm"},{"LeftUpperArm","LeftLowerArm"},{"LeftLowerArm","LeftHand"},
+}
+
+local function getAimPart(char, name)
+    return char:FindFirstChild(name) or char:FindFirstChild("HumanoidRootPart")
+end
+
+local function getClosestTarget()
+    local closest, minDist = nil, aimFOV
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character then
+            local part = getAimPart(plr.Character, "Head")
+            if part then
+                local sp, on = Camera:WorldToViewportPoint(part.Position)
+                if on then
+                    local d = (Vector2.new(sp.X,sp.Y) - Vector2.new(Mouse.X,Mouse.Y)).Magnitude
+                    if d < minDist then
+                        minDist, closest = d, part
+                    end
+                end
+            end
+        end
+    end
+    return closest
+end
+
+-- silent-aim hook
+do
+    local mt, old = getrawmetatable(game), getrawmetatable(game).__index
+    setreadonly(mt, false)
+    mt.__index = newcclosure(function(self,k)
+        if silentAimEnabled and typeof(self)=="Instance" and self.ClassName=="Mouse" then
+            if k=="Hit" then
+                local h = getClosestTarget()
+                if h then return CFrame.new(h.Position) end
+            elseif k=="Target" then
+                local h = getClosestTarget()
+                if h then return h end
+            end
+        end
+        return old(self,k)
+    end)
+    setreadonly(mt, true)
+end
+
+-- build UI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "Ledger"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- main container for tab contents
+local container = Instance.new("Frame", screenGui)
+container.Name = "Container"
+container.AnchorPoint = Vector2.new(.5,0)
+container.Position    = UDim2.fromScale(.5, .05)
+container.Size        = UDim2.new(0,600,0,380)
+container.BackgroundColor3 = Color3.fromRGB(25,25,25)
+container.BorderSizePixel = 0
+
+-- simple tab-show/hide helper
+local tabs = {}
+local function newTab(name)
+    local f = Instance.new("Frame",container)
+    f.Name = name.."Tab"
+    f.Size = UDim2.new(1, -20, 1, -50)
+    f.Position = UDim2.new(0,10,0,10)
+    f.BackgroundTransparency = 1
+    f.Visible = false
+    tabs[name] = f
+    return f
+end
+
+-- Combat tab
+local combatTab = newTab("Combat")
+do
+    local layout = Instance.new("UIListLayout",combatTab)
+    layout.Padding = UDim.new(0,8)
+    layout.SortOrder= Enum.SortOrder.LayoutOrder
+
+    local function makeCheckbox(text, init, onToggle)
+        local frm = Instance.new("Frame",combatTab)
+        frm.Size = UDim2.new(1,0,0,24)
+        local cb = Instance.new("TextButton",frm)
+        cb.Text = (init and "☑" or "☐").."  "..text
+        cb.BackgroundTransparency=1
+        cb.Size = UDim2.new(1,0,1,0)
+        cb.TextXAlignment=Enum.TextXAlignment.Left
+        cb.Font=Enum.Font.SourceSans
+        cb.TextSize=16
+        local state = init
+        cb.MouseButton1Click:Connect(function()
+            state = not state
+            cb.Text = (state and "☑" or "☐").."  "..text
+            onToggle(state)
+        end)
+        return frm
+    end
+
+    makeCheckbox("Silent Aim",   silentAimEnabled,   function(v) silentAimEnabled   = v end)
+    makeCheckbox("Cam Lock",     camLockEnabled,     function(v) camLockEnabled     = v end)
+    makeCheckbox("Skeleton ESP", skeletonESPEnabled, function(v) skeletonESPEnabled = v end)
+
+    local lockedLabel = Instance.new("TextLabel",combatTab)
+    lockedLabel.Size = UDim2.new(1,0,0,20)
+    lockedLabel.Font = Enum.Font.SourceSans
+    lockedLabel.TextSize=14
+    lockedLabel.TextColor3=Color3.new(1,1,1)
+    lockedLabel.BackgroundTransparency=1
+    lockedLabel.Text = "Locked: None"
+
+    -- update loop
+    RunService.RenderStepped:Connect(function()
+        -- camera lock
+        if camLockEnabled then
+            local h = getClosestTarget()
+            if h then
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, h.Position)
+            end
+        end
+        -- locked label
+        local h = getClosestTarget()
+        if silentAimEnabled and h then
+            lockedLabel.Text = "Locked: "..h.Parent.Name
+        else
+            lockedLabel.Text = "Locked: None"
+        end
+
+        -- skeleton ESP
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr~=LocalPlayer then
+                local c = plr.Character
+                if skeletonESPEnabled and c and c.PrimaryPart then
+                    if not espLines[plr] then
+                        espLines[plr] = {}
+                        for _,bp in ipairs(bonePairs) do
+                            local l = Drawing.new("Line")
+                            l.Color, l.Thickness, l.Transparency = Color3.new(0,1,0), 2, 1
+                            table.insert(espLines[plr], {line=l,from=bp[1],to=bp[2]})
+                        end
+                    end
+                    for _,seg in ipairs(espLines[plr]) do
+                        local a,b = getAimPart(c,seg.from), getAimPart(c,seg.to)
+                        if a and b then
+                            local sa,onA = Camera:WorldToViewportPoint(a.Position)
+                            local sb,onB = Camera:WorldToViewportPoint(b.Position)
+                            seg.line.Visible = onA and onB
+                            if onA and onB then
+                                seg.line.From = Vector2.new(sa.X,sa.Y)
+                                seg.line.To   = Vector2.new(sb.X,sb.Y)
+                            end
+                        else
+                            seg.line.Visible = false
+                        end
+                    end
+                elseif espLines[plr] then
+                    for _,seg in ipairs(espLines[plr]) do seg.line:Remove() end
+                    espLines[plr] = nil
+                end
+            end
+        end
+    end)
+end
+
+-- Visuals tab (empty for now)
+local visualsTab = newTab("Visuals")
+
+-- World tab (empty placeholder)
+local worldTab   = newTab("World")
+
+-- Settings tab (empty placeholder)
+local settingsTab= newTab("Settings")
+
+-- Lua tab
+local luaTab = newTab("Lua")
+do
+    local codeBox = Instance.new("TextBox",luaTab)
+    codeBox.MultiLine      = true
+    codeBox.ClearTextOnFocus = false
+    codeBox.TextWrapped    = true
+    codeBox.Font           = Enum.Font.Code
+    codeBox.TextSize       = 16
+    codeBox.PlaceholderText= "-- write your Lua here"
+    codeBox.Size           = UDim2.new(1, -20, 1, -60)
+    codeBox.Position       = UDim2.new(0,10,0,10)
+    codeBox.Text           = ''
+
+    local function makeBtn(txt, posX, cb)
+        local b = Instance.new("TextButton",luaTab)
+        b.Text = txt
+        b.Font = Enum.Font.SourceSans
+        b.TextSize = 16
+        b.Size = UDim2.new(0,100,0,30)
+        b.Position = UDim2.new(0,10 + (posX*110),1,-40)
+        b.BackgroundColor3 = Color3.fromRGB(40,40,40)
+        b.BorderSizePixel = 0
+        b.MouseButton1Click:Connect(cb)
+        return b
+    end
+
+    makeBtn("Execute", 0, function()
+        local ok,err = pcall(function()
+            local fn = assert(loadstring(codeBox.Text),"compile error")
+            fn()
+        end)
+        if not ok then
+            warn("Lua exec error:",err)
+        end
+    end)
+    makeBtn("Clear",   1, function() codeBox.Text = "" end)
+    makeBtn("Load File",2,function()
+        warn("Load File not implemented.")
+    end)
+    makeBtn("Save File",3,function()
+        warn("Save File not implemented.")
+    end)
+end
+
+-- bottom tab bar
+local tabBar = Instance.new("Frame",screenGui)
+tabBar.Size = UDim2.new(0,600,0,30)
+tabBar.Position = UDim2.fromScale(.5, .05) + UDim2.new(-300,0,1,350)
+tabBar.BackgroundTransparency = 1
+
+local tabNames = {"Combat","Visuals","World","Lua","Settings"}
+for i,name in ipairs(tabNames) do
+    local b = Instance.new("TextButton",tabBar)
+    b.Text = name:sub(1,1)
+    b.Font=Enum.Font.Code
+    b.TextSize=20
+    b.Size=UDim2.new(0,100,1,0)
+    b.Position=UDim2.new(0,(i-1)*100,0,0)
+    b.BackgroundColor3=Color3.fromRGB(40,40,40)
+    b.BorderSizePixel=0
+    b.MouseButton1Click:Connect(function()
+        for _,f in pairs(tabs) do f.Visible = false end
+        tabs[name].Visible = true
+    end)
+end
+
+-- default
+tabs["Combat"].Visible = true
