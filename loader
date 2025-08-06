@@ -1,282 +1,323 @@
--- LocalScript ▶ StarterGui/LedgerUI
+-- Combined Roblox Cheat Script with UI
 
--- AC ByPass: run before everything else
-local OriginalGetFenv
-OriginalGetFenv = hookfunction(getrenv().getfenv, newcclosure(function(Level)
+-- Services
+local UserInputService = game:GetService("UserInputService")
+local RunService       = game:GetService("RunService")
+local Players          = game:GetService("Players")
+local CoreGui          = game:GetService("CoreGui")
+local camera           = workspace.CurrentCamera
+local LocalPlayer      = Players.LocalPlayer
+
+-- Settings
+local settings = {
+    enableBypass     = true,
+    enableNoRecoil   = true,
+    enableBulletTP   = true,
+    enableTriggerbot = true,
+    enableESP        = true,
+    bulletKey        = Enum.KeyCode.C,
+    triggerKey       = Enum.KeyCode.T,
+    defaultColor     = Color3.fromRGB(255, 0, 0),
+    teamCheck        = false,
+    teamColor        = true,
+}
+
+--[[============================================================
+   Bypass Hooks
+============================================================]]
+-- hook getfenv
+local OriginalGetFenv; OriginalGetFenv = hookfunction(getrenv().getfenv, newcclosure(function(Level)
     if not checkcaller() then
-        task.wait(15e15)
+        task.wait(1e15)
         return {sigma = function() return 0 end, balls = 1, tablehooked = {}}
     end
     return OriginalGetFenv(Level)
 end))
+getgenv().UsedAdonisBypass = true
 
--- Adonis Bypaassss
-local g = getinfo or debug.getinfo
-local d = false
-local h = {}
-local x, y
-setthreadidentity(2)
-for _, v in pairs(getgc(true)) do
-    if typeof(v) == "table" then
-        local a = rawget(v, "Detected")
-        local b = rawget(v, "Kill")
-        if typeof(a) == "function" and not x then
-            x = a
-            local o; o = hookfunction(x, function(c, f)
-                if d then warn("Adonis AntiCheat flagged\nMethod: "..c.."\nInfo: "..f) end
-                return true
-            end)
-            table.insert(h, x)
-        end
-        if rawget(v, "Variables") and rawget(v, "Process") and typeof(b) == "function" and not y then
-            y = b
-            local o; o = hookfunction(y, function(f)
-                if d then warn("Adonis AntiCheat tried to kill (fallback): "..f) end
-            end)
-            table.insert(h, y)
-        end
+-- hook debug.info
+local oldDbgInfo; oldDbgInfo = hookfunction(debug.info, function(...)
+    local args = {...}
+    if args[1] == 2 and args[2] == "f" then
+        return nil
     end
+    return oldDbgInfo(...)
+end)
+
+-- disable certain GC functions
+for _, Data in next, getgc() do
+    pcall(function()
+        local info = debug.getinfo(Data)
+        local cons = debug.getconstants(Data)
+        if typeof(Data) == "function" and info.name == "Immutable" then
+            hookfunction(Data, function() end)
+        elseif typeof(Data) == "function" and table.find(cons, "MethodError") and table.find(cons, "ServerError") and table.find(cons, "ReadError") then
+            hookfunction(Data, function() end)
+        elseif typeof(Data) == "function" and table.find(cons, "Disconnected from server") then
+            hookfunction(Data, function() end)
+        elseif typeof(Data) == "function" and table.find(cons, "fakePlayer") then
+            hookfunction(Data, function() end)
+        elseif typeof(Data) == "function" and table.find(cons, "Tampering with Client [read rt0001]") and table.find(cons, "ReadError") and table.find(cons, "Potentially dangerous index") then
+            hookfunction(Data, function() end)
+        end
+    end)
 end
-local o; o = hookfunction(getrenv().debug.info, newcclosure(function(...)
-    local a = select(1, ...)
-    if x and a == x then
-        if d then warn("zins | adonis bypassed") end
-        return coroutine.yield(coroutine.running())
+
+-- prevent kick
+local oldIndex; oldIndex = hookmetamethod(game, "__index", function(self, key)
+    if self == LocalPlayer and tostring(key):lower() == "kick" then
+        return function() end
     end
-    return o(...)
-end))
-setthreadidentity(7)
+    return oldIndex(self, key)
+end)
+local oldNamecall; oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    if self == LocalPlayer and getnamecallmethod():lower() == "kick" then
+        return
+    end
+    return oldNamecall(self, ...)
+end)
 
--- Services & Variables
-local Players           = game:GetService("Players")
-local RunService        = game:GetService("RunService")
-local UserInputService  = game:GetService("UserInputService")
-local LocalPlayer       = Players.LocalPlayer
-local Camera            = workspace.CurrentCamera
-local Mouse             = LocalPlayer:GetMouse()
+-- Adonis loop
+spawn(function()
+    local foundfunc, foundtable1, foundtable2
+    while getgenv().UsedAdonisBypass do
+        if not foundfunc then
+            for _, Data in next, getgc(false) do
+                pcall(function()
+                    if type(Data) == "function" then
+                        local info = debug.getinfo(Data)
+                        if info.name == "Send" and islclosure(Data) then
+                            foundfunc = Data
+                        end
+                    end
+                end)
+            end
+            for _, Data in next, getgc(true) do
+                pcall(function()
+                    if foundfunc and type(Data) == "table" and Data.CheckClient and Data.Returnables and Data.Send == foundfunc then
+                        foundtable1 = Data
+                    end
+                    if type(Data) == "table" and Data.Remote and Data.DepsName then
+                        foundtable2 = Data
+                    end
+                end)
+            end
+        else
+            foundfunc("ClientCheck", {Sent = foundtable1.Sent or 0, Received = foundtable1.Received}, foundtable2.DepsName)
+        end
+        task.wait(10)
+    end
+end)
 
--- Feature states
-global_feature_states = {
-    SilentAim = false,
-    CamLock   = false,
-    Boxes     = false,
-    NameESP   = false,
-    HealthBar = false,
-    ToolName  = false,
-    Distance  = false,
-    HeadDot   = false,
-    Snaplines = false,
-    Chams     = false,
-    OOFArrows = false,
-}
+--[[============================================================
+   No Recoil
+============================================================]]
+local function isFramework(inst)
+    return tostring(inst) == "Framework"
+end
+local function checkArgs(inst, idx)
+    return tostring(inst):lower():find("camera") and idx == "CFrame"
+end
+local oldNewIndex; oldNewIndex = hookmetamethod(game, "__newindex", function(self, key, value)
+    local caller = getcallingscript()
+    if settings.enableNoRecoil and isFramework(caller) and checkArgs(self, key) then
+        return
+    end
+    return oldNewIndex(self, key, value)
+end)
 
--- Default keybinds (changeable in Settings tab)
-global_keybinds = {
-    SilentAim = Enum.KeyCode.C,
-    CamLock   = Enum.KeyCode.R,
-    Boxes     = Enum.KeyCode.T,
-    NameESP   = Enum.KeyCode.Y,
-    HealthBar = Enum.KeyCode.U,
-    ToolName  = Enum.KeyCode.I,
-    Distance  = Enum.KeyCode.O,
-    HeadDot   = Enum.KeyCode.P,
-    Snaplines = Enum.KeyCode.LeftBracket,
-    Chams     = Enum.KeyCode.RightBracket,
-    OOFArrows = Enum.KeyCode.Backslash,
-}
+--[[============================================================
+   Bullet Teleport
+============================================================]]
+local Target
 
-local waitingBind = nil
-
--- Silent Aim (Bullet Teleport)
-local Target, bullettp = nil, true
 local function refreshGrip(tool)
     tool.Parent = LocalPlayer.Backpack
     tool.Parent = LocalPlayer.Character
 end
-local function setPosition(tool, pos, oldPos)
-    tool.GripPos = pos
-    tool.Default.Transparency = 1
-    refreshGrip(tool)
-    task.wait(0.03)
-    tool.GripPos = oldPos
-    tool.Default.Transparency = 0
-    refreshGrip(tool)
-end
-function bulletTeleport(character)
-    local equipped, equippedTool, oldPos
-    character.ChildAdded:Connect(function(tool)
-        if tool:IsA("Tool") and bullettp then
-            equippedTool = tool
-            oldPos = tool.GripPos
-            equipped = tool.Activated:Connect(function()
-                if Target then
-                    local root = LocalPlayer.Character.HumanoidRootPart
-                    local rel = root.CFrame:PointToObjectSpace(Target.Character.HumanoidRootPart.Position)
+
+local function bulletTeleport(char)
+    char.ChildAdded:Connect(function(tool)
+        if not settings.enableBulletTP then return end
+        if tool:IsA("Tool") then
+            local oldPos = tool.GripPos
+            tool.Activated:Connect(function()
+                if Target and tool and tool.GripPos then
+                    local rel = LocalPlayer.Character.HumanoidRootPart.CFrame:PointToObjectSpace(Target.Character.HumanoidRootPart.Position)
                     local setPos = Vector3.new(-rel.Z, 0, rel.X)
-                    setPosition(equippedTool, setPos, oldPos)
+                    tool.GripPos = setPos
+                    tool.Default.Transparency = 1
+                    refreshGrip(tool)
+                    task.wait(0.03)
+                    tool.GripPos = oldPos
+                    tool.Default.Transparency = 0
+                    refreshGrip(tool)
                 end
             end)
         end
     end)
-    character.ChildRemoved:Connect(function(tool)
-        if tool:IsA("Tool") and equipped then
-            equipped:Disconnect()
-            equippedTool = nil
-        end
-    end)
 end
-pcall(bulletTeleport, LocalPlayer.Character)
+
+if LocalPlayer.Character then bulletTeleport(LocalPlayer.Character) end
 LocalPlayer.CharacterAdded:Connect(bulletTeleport)
 
-global_GetClosestToMouse = function()
-    local closest, dist = nil, math.huge
-    for _,plr in ipairs(Players:GetPlayers()) do
-        if plr~=LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            local pos, on = Camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
-            if on then
-                local d = (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-                if d < dist then dist, closest = d, plr end
-            end
-        end
-    end
-    return closest
-end
-
--- Input handling
+-- lock/unlock target
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
-    -- UI toggle with Insert
-    if input.KeyCode == Enum.KeyCode.Insert then
-        gui.Enabled = not gui.Enabled
-        return
-    end
-    if waitingBind then
-        if input.UserInputType == Enum.UserInputType.Keyboard then
-            global_keybinds[waitingBind] = input.KeyCode
+    if input.KeyCode == settings.bulletKey then
+        if Target then
+            Target = nil
+            warn("BulletTP: Unlocked")
+        else
+            local closest, dist = nil, math.huge
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    local pos, on = camera:WorldToScreenPoint(p.Character.HumanoidRootPart.Position)
+                    if on then
+                        local md = (Vector2.new(pos.X, pos.Y) - Vector2.new(LocalPlayer:GetMouse().X, LocalPlayer:GetMouse().Y)).Magnitude
+                        if md < dist then
+                            dist = md; closest = p
+                        end
+                    end
+                end
+            end
+            Target = closest
+            warn("BulletTP: Locked on " .. (Target and Target.Name or "nil"))
         end
-        waitingBind = nil
-        return
     end
-    for feat, key in pairs(global_keybinds) do
-        if input.KeyCode == key then
-            if feat == "SilentAim" then
-                if not Target then Target = global_GetClosestToMouse() else Target = nil end
-            else
-                global_feature_states[feat] = not global_feature_states[feat]
+end)
+
+--[[============================================================
+   Triggerbot
+============================================================]]
+spawn(function()
+    while true do
+        task.wait(0.1)
+        if settings.enableTriggerbot and UserInputService:IsKeyDown(settings.triggerKey) then
+            local mouse = LocalPlayer:GetMouse()
+            local tgt = mouse.Target
+            if tgt and tgt.Parent and tgt.Parent:FindFirstChild("Humanoid") then
+                local hrp = tgt.Parent.HumanoidRootPart
+                local future = hrp.Position + (hrp.Velocity * (getgenv().prediction or 0.12))
+                mouse.Hit = CFrame.new(future)
+                local tool = LocalPlayer.Backpack:FindFirstChildOfClass("Tool") or LocalPlayer.Character:FindFirstChildOfClass("Tool")
+                if tool then
+                    tool:Activate()
+                end
+                task.wait(getgenv().click_duration or 0.001)
             end
         end
     end
 end)
 
--- Argument retrieval (for silent aim)
-local Argument = ""
-local function getArgument()
-    local bc = getscriptbytecode(LocalPlayer.PlayerGui.Framework)
-    for token in tostring(bc):gmatch("%w+") do if token:match("UpdateMousePos") then Argument = token break end end
+--[[============================================================
+   ESP
+============================================================]]
+local espCache = {}
+local function createEsp(p)
+    local d = {}
+    d.box     = Drawing.new("Square"); d.box.Thickness = 1; d.box.Filled = false
+    d.outline = Drawing.new("Square"); d.outline.Thickness = 3; d.outline.Filled = false
+    d.box.ZIndex, d.outline.ZIndex = 2, 1
+    espCache[p] = d
 end
-for i = 1, 5 do getArgument() end
+local function removeEsp(p)
+    for _, d in pairs(espCache[p] or {}) do d:Remove() end
+    espCache[p] = nil
+end
+local function updateEsp(p)
+    local d = espCache[p]
+    if not d or not settings.enableESP then return end
+    if settings.teamCheck and p.Team == LocalPlayer.Team then
+        d.box.Visible = false; d.outline.Visible = false; return
+    end
+    local c = p.Character
+    if c then
+        local cf = c:GetModelCFrame()
+        local pos, on, depth = camera:WorldToViewportPoint(cf.Position)
+        if on then
+            local scale = 1 / (depth * math.tan(math.rad(camera.FieldOfView / 2)) * 2) * 1000
+            local w, h = math.round(4 * scale), math.round(5 * scale)
+            local x, y = math.round(pos.X), math.round(pos.Y)
+            local size, pos2 = Vector2.new(w, h), Vector2.new(x - w/2, y - h/2)
+            d.box.Size       = size; d.box.Position       = pos2
+            d.outline.Size   = size; d.outline.Position   = pos2
+            d.box.Color      = settings.teamColor and p.TeamColor.Color or settings.defaultColor
+            d.box.Visible, d.outline.Visible = true, true
+        else
+            d.box.Visible, d.outline.Visible = false, false
+        end
+    else
+        d.box.Visible, d.outline.Visible = false, false
+    end
+end
 
--- Fire server on tool use
-local function onCharAdded(char)
-    char.ChildAdded:Connect(function(tool)
-        if tool:IsA("Tool") then
-            tool.Activated:Connect(function()
-                if Target then
-                    local hp = Target.Character.HumanoidRootPart.Position
-                    local vel = Target.Character.HumanoidRootPart.Velocity
-                    game.ReplicatedStorage.MainEvent:FireServer(Argument, hp + vel * 0.141245121)
-                end
-            end)
+for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer then createEsp(p) end end
+Players.PlayerAdded:Connect(createEsp)
+Players.PlayerRemoving:Connect(removeEsp)
+RunService:BindToRenderStep("ESP", Enum.RenderPriority.Camera.Value, function() for p in pairs(espCache) do updateEsp(p) end end)
+
+--[[============================================================
+   UI
+============================================================]]
+local screen = Instance.new("ScreenGui", CoreGui)
+screen.Name = "CheatUI"
+local frame = Instance.new("Frame", screen)
+frame.Size = UDim2.new(0, 300, 0, 300)
+frame.Position = UDim2.new(0.5, -150, 0.5, -150)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Active = true
+frame.Draggable = true
+
+-- Toggle UI visibility
+UserInputService.InputBegan:Connect(function(inp)
+    if inp.KeyCode == Enum.KeyCode.Insert then
+        frame.Visible = not frame.Visible
+    end
+end)
+
+-- Helper to make toggles
+local function makeToggle(text, y, key)
+    local btn = Instance.new("TextButton", frame)
+    btn.Size = UDim2.new(0, 280, 0, 30)
+    btn.Position = UDim2.new(0, 10, 0, y)
+    btn.Text = text .. ": " .. tostring(settings[key])
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+    btn.MouseButton1Click:Connect(function()
+        settings[key] = not settings[key]
+        btn.Text = text .. ": " .. tostring(settings[key])
+    end)
+    return btn
+end
+makeToggle("Bypass", 10, "enableBypass")
+makeToggle("No Recoil", 50, "enableNoRecoil")
+makeToggle("Bullet TP", 90, "enableBulletTP")
+makeToggle("Triggerbot", 130, "enableTriggerbot")
+makeToggle("ESP", 170, "enableESP")
+
+-- Keybind boxes
+local function makeKeybind(label, y, key)
+    local lbl = Instance.new("TextLabel", frame)
+    lbl.Size = UDim2.new(0, 100, 0, 30)
+    lbl.Position = UDim2.new(0, 10, 0, y)
+    lbl.Text = label
+    lbl.TextColor3 = Color3.new(1,1,1)
+
+    local box = Instance.new("TextBox", frame)
+    box.Size = UDim2.new(0, 170, 0, 30)
+    box.Position = UDim2.new(0, 120, 0, y)
+    box.Text = settings[key].Name
+    box.TextColor3 = Color3.new(1,1,1)
+    box.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    box.FocusLost:Connect(function(enter)
+        local name = box.Text
+        if Enum.KeyCode[name] then
+            settings[key] = Enum.KeyCode[name]
+        else
+            box.Text = settings[key].Name
         end
     end)
 end
-LocalPlayer.CharacterAdded:Connect(onCharAdded)
-if LocalPlayer.Character then onCharAdded(LocalPlayer.Character) end
-
--- Universal Box ESP Settings
-local boxSettings = {
-    defaultcolor = Color3.fromRGB(255, 0, 0),
-    teamcheck    = false,
-    teamcolor    = true,
-}
-
--- Box ESP implementation
-local espCache = {}
-local function createBoxESP(player)
-    local box = Drawing.new("Square")
-    box.Thickness   = 1
-    box.Filled      = false
-    box.Transparency= 1
-    box.Color      = boxSettings.defaultcolor
-    box.Visible    = false
-    box.ZIndex     = 2
-    local outline = Drawing.new("Square")
-    outline.Thickness   = 3
-    outline.Filled      = false
-    outline.Transparency= 1
-    outline.Color      = Color3.new()
-    outline.Visible    = false
-    outline.ZIndex     = 1
-    espCache[player] = {box = box, outline = outline}
-end
-local function removeBoxESP(player)
-    local data = espCache[player]
-    if data then
-        data.box:Remove()
-        data.outline:Remove()
-        espCache[player] = nil
-    end
-end
-local function updateBoxESP(player)
-    local data = espCache[player]
-    local char = player.Character
-    if char and char.PrimaryPart then
-        local cframe = char:GetModelCFrame()
-        local screenPos, onScreen, depth = Camera:WorldToViewportPoint(cframe.Position)
-        data.box.Visible    = onScreen
-        data.outline.Visible= onScreen
-        if onScreen then
-            local scale = 1 / (depth * math.tan(math.rad(Camera.FieldOfView / 2)) * 2) * 1000
-            local w, h   = math.round(4 * scale), math.round(5 * scale)
-            local x, y   = math.round(screenPos.X), math.round(screenPos.Y)
-            local color  = boxSettings.teamcolor and player.TeamColor.Color or boxSettings.defaultcolor
-            data.box.Size      = Vector2.new(w, h)
-            data.box.Position  = Vector2.new(x - w/2, y - h/2)
-            data.box.Color     = color
-            data.outline.Size      = data.box.Size
-            data.outline.Position  = data.box.Position
-            data.outline.Color     = color
-        end
-    else
-        data.box.Visible    = false
-        data.outline.Visible= false
-    end
-end
-
--- Initialize Box ESP for players
-for _, plr in ipairs(Players:GetPlayers()) do
-    if plr ~= LocalPlayer then createBoxESP(plr) end
-end
-Players.PlayerAdded:Connect(function(plr) createBoxESP(plr) end)
-Players.PlayerRemoving:Connect(function(plr) removeBoxESP(plr) end)
-
--- Main UI Creation
-local gui = Instance.new("ScreenGui")
-gui.Name = "LedgerUI"
-gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-local container = Instance.new("Frame", gui)
-container.AnchorPoint = Vector2.new(0.5, 0.5)
-container.Position    = UDim2.new(0.5, 0, 0.5, 0)
-container.Size        = UDim2.new(0, 600, 0, 420)
-container.BackgroundColor3 = Color3.fromRGB(20,20,20)
-container.BorderSizePixel  = 0
-
--- Drag functionality
-local dragBar = Instance.new("Frame", container)
-dragBar.Size = UDim2.new(1, 0, 0, 30)
-dragBar.BackgroundColor3 = Color3.fromRGB(40,40,40)
-dragBar.InputBegan:Connect(function(inp)
-    if inp.UserInputType == Enum.UserInputType.MouseButton1 then
-        local startPos = container.Position
-        local startInp = inp.Position
-        local conn = UserInputService.InputChanged:
+makeKeybind("Bullet Key", 210, "bulletKey")
+makeKeybind("Trigger Key", 250, "triggerKey")
