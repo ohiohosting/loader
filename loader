@@ -1,47 +1,5 @@
--- Roblox Weapon Skins Table (ready for use)
-local SkinsConfig = {}
-
-SkinsConfig.skins = {
-    ["Default"] = { type = "colour", colour = Color3.fromRGB(17,17,17), text = "Default" },
-    ["Laser"]   = { type = "image",  image_id = 11693802768,   text = "Laser" },
-    ["Impietas"] = { type = "image", image_id = 11697285979,  text = "Impietas" },
-    ["Heejin"]  = { type = "image",  image_id = 98760773720940, text = "Heejin" },
-    ["Yellow Camo"]  = { type = "image", image_id = 10990220398, text = "Yellow Camo" },
-    ["Black Camo"]   = { type = "image", image_id = 10990250566, text = "Black Camo" },
-    ["Pink Camo"]    = { type = "image", image_id = 10990288306, text = "Pink Camo" },
-    ["Red Camo"]     = { type = "image", image_id = 10990253858, text = "Red Camo" },
-    ["Green Camo"]   = { type = "image", image_id = 10990263482, text = "Green Camo" },
-    ["Blue Camo"]    = { type = "image", image_id = 10990270844, text = "Blue Camo" },
-    ["Camoflage"]    = { type = "image", image_id = 10990282017, text = "Camouflage" },
-    ["Orange Camo"]  = { type = "image", image_id = 10990258542, text = "Orange Camo" },
-    ["Desert Camo"]  = { type = "image", image_id = 10990275722, text = "Desert Camo" },
-    ["Sparkle Green"]  = { type = "image", image_id = 10990102141, text = "Sparkle Green" },
-    ["Sparkle Orange"] = { type = "image", image_id = 10990111547, text = "Sparkle Orange" },
-    ["Sparkle Blue"]   = { type = "image", image_id = 10990120455, text = "Sparkle Blue" },
-    ["Sparkle Pink"]   = { type = "image", image_id = 10990139277, text = "Sparkle Pink" },
-    ["Sparkle Cyan"]   = { type = "image", image_id = 10990145621, text = "Sparkle Cyan" },
-    ["Sparkle Yellow"] = { type = "image", image_id = 10990151498, text = "Sparkle Yellow" },
-    ["Sparkle Purple"] = { type = "image", image_id = 10990156689, text = "Sparkle Purple" },
-    ["Sparkle Red"]    = { type = "image", image_id = 10990160910, text = "Sparkle Red" },
-    ["Gold Skin"]   = { type = "colour", colour = Color3.fromRGB(239,184,56), text = "Gold" },
-    ["Really blue"] = { type = "colour", colour = Color3.fromRGB(0,0,255),     text = "Blue" },
-    ["Toothpaste"]  = { type = "colour", colour = Color3.fromRGB(0,255,255),   text = "Cyan" },
-    ["Bright green"]= { type = "colour", colour = Color3.fromRGB(0,255,0),     text = "Green" },
-    ["Deep orange"] = { type = "colour", colour = Color3.fromRGB(255,176,0),   text = "Orange" },
-    ["Hot pink"]    = { type = "colour", colour = Color3.fromRGB(255,0,191),   text = "Pink" },
-    ["Royal purple"]= { type = "colour", colour = Color3.fromRGB(98,37,209),   text = "Purple" },
-    ["Really red"]  = { type = "colour", colour = Color3.fromRGB(255,0,0),     text = "Red" },
-    ["Institutional white"] = { type = "colour", colour = Color3.fromRGB(248,248,248), text = "White" }
-}
-
--- single reference
-local weaponSkins = SkinsConfig.skins
-
--- sorted list of names
-local skinNames = {}
-for name in pairs(weaponSkins) do table.insert(skinNames, name) end
-table.sort(skinNames)
-
+-- FATALITY.WIN - Full Legit/Rage/ESP/Exploits UI (2025-07-06, GPT Merge)
+-- Author: 0nehex / ChatGPT
 
 pcall(function() game.CoreGui.FatalityWin:Destroy() end)
 local sg = Instance.new("ScreenGui", game:GetService("CoreGui"))
@@ -76,7 +34,7 @@ title.Position = UDim2.new(0,14,0,8)
 title.Size = UDim2.new(0,150,0,28)
 title.TextXAlignment = Enum.TextXAlignment.Left
 
-local tabs = {"RAGE","LEGIT","VISUALS","MISC","SKINS"}
+local tabs = {"RAGE","LEGIT","VISUALS","MISC"}
 local current = 1
 local btns = {}
 for i,v in ipairs(tabs) do
@@ -719,70 +677,10 @@ RunService.RenderStepped:Connect(function()
     Lighting.Ambient  = _G.SkyColor
 end)
 
-RunService.RenderStepped:Connect(function()
-    local skinName = _G.SelectedWeaponSkin or skinNames[1]
-    local skinData = weaponSkins[skinName]
-
-    if LocalPlayer and LocalPlayer.Character then
-        for _, tool in ipairs(LocalPlayer.Character:GetChildren()) do
-            if tool:IsA("Tool") then
-
-                if skinData.type == "colour" then
-                    -- Apply a solid color to every BasePart
-                    for _, part in ipairs(tool:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.Color = skinData.colour
-                            -- Clear any textures on MeshParts
-                            if part:IsA("MeshPart") then
-                                part.TextureID = ""
-                            end
-                            -- Remove any decals left over
-                            for _, child in ipairs(part:GetChildren()) do
-                                if child:IsA("Decal") then
-                                    child:Destroy()
-                                end
-                            end
-                        end
-                    end
-
-                elseif skinData.type == "image" then
-                    local asset = "rbxassetid://" .. skinData.image_id
-
-                    -- 1) Full-model texture on MeshParts
-                    for _, mp in ipairs(tool:GetDescendants()) do
-                        if mp:IsA("MeshPart") then
-                            mp.TextureID = asset
-                        end
-                    end
-
-                    -- 2) Six-face decals on every non-Mesh BasePart
-                    for _, part in ipairs(tool:GetDescendants()) do
-                        if part:IsA("BasePart") and not part:IsA("MeshPart") then
-                            -- clear old decals
-                            for _, d in ipairs(part:GetChildren()) do
-                                if d:IsA("Decal") then d:Destroy() end
-                            end
-                            -- apply new decal on all faces
-                            for _, face in ipairs(Enum.NormalId:GetEnumItems()) do
-                                local decal = Instance.new("Decal")
-                                decal.Name    = "SkinDecal_"..face.Name
-                                decal.Face    = face
-                                decal.Texture = asset
-                                decal.Parent  = part
-                            end
-                        end
-                    end
-
-                end
-            end
-        end
-    end
-end)
 
 ----------------------------------------------------------
 -- UI Section Functions (Toggles, Sliders, KeyPickers)
 ----------------------------------------------------------
-
 local function addToggle(sec, label, y, flag)
     local t = Instance.new("TextLabel", sec)
     t.Text = label
@@ -882,7 +780,6 @@ local presetColors = {
 }
 
 function addColorPicker(sec, label, y, flag, default)
-    -- initialize
     _G[flag] = _G[flag] or default
     local idx = 1
     for i, c in ipairs(presetColors) do
@@ -892,27 +789,24 @@ function addColorPicker(sec, label, y, flag, default)
         end
     end
 
-    -- label
     local lbl = Instance.new("TextLabel", sec)
-    lbl.Text               = label
-    lbl.Font               = Enum.Font.Gotham
-    lbl.TextSize           = 15
-    lbl.TextColor3         = textCol
+    lbl.Text = label
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 15
+    lbl.TextColor3 = Color3.fromRGB(230,230,230)
     lbl.BackgroundTransparency = 1
-    lbl.Position           = UDim2.new(0, 18, 0, 10 + y)
-    lbl.Size               = UDim2.new(0, 100, 0, 24)
-    lbl.TextXAlignment     = Enum.TextXAlignment.Left
+    lbl.Position = UDim2.new(0,18,0,10+y)
+    lbl.Size = UDim2.new(0,120,0,24)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- color-preview button
     local btn = Instance.new("TextButton", sec)
-    btn.Size               = UDim2.new(0, 48, 0, 24)
-    btn.Position           = UDim2.new(0, 140, 0, 10 + y)
-    btn.BackgroundColor3   = _G[flag]
-    btn.BorderSizePixel    = 1
-    btn.AutoButtonColor    = true
-    btn.Text               = ""
-    
-    -- cycle through presetColors on click
+    btn.Position = UDim2.new(0,140,0,10+y)
+    btn.Size = UDim2.new(0,48,0,24)
+    btn.BackgroundColor3 = _G[flag]
+    btn.BorderSizePixel = 1
+    btn.Text = ""
+    btn.AutoButtonColor = true
+
     btn.MouseButton1Click:Connect(function()
         idx = idx + 1
         if idx > #presetColors then idx = 1 end
@@ -920,48 +814,6 @@ function addColorPicker(sec, label, y, flag, default)
         btn.BackgroundColor3 = _G[flag]
     end)
 end
-
-local skinNames = {}
-for name in pairs(weaponSkins) do table.insert(skinNames, name) end
-table.sort(skinNames)
-
--- clean UI helper for skins
-function addWeaponSkinPicker(sec, label, y, flag)
-    -- Init selection
-    _G[flag] = _G[flag] or skinNames[1]
-    local idx = table.find(skinNames, _G[flag]) or 1
-
-    -- Label
-    local lbl = Instance.new("TextLabel", sec)
-    lbl.Text               = label
-    lbl.Font               = Enum.Font.Gotham
-    lbl.TextSize           = 15
-    lbl.TextColor3         = textCol
-    lbl.BackgroundTransparency = 1
-    lbl.Position           = UDim2.new(0, 18, 0, 10 + y)
-    lbl.Size               = UDim2.new(0, 100, 0, 24)
-    lbl.TextXAlignment     = Enum.TextXAlignment.Left
-
-    -- Picker button (anchored to right edge)
-    local btn = Instance.new("TextButton", sec)
-    btn.AnchorPoint        = Vector2.new(1, 0)
-    btn.Position           = UDim2.new(1, -40, 0, 45 + y)  -- 18px padding from right
-    btn.Size               = UDim2.new(0, 160, 0, 24)
-    btn.BackgroundColor3   = sectionCol
-    btn.BorderSizePixel    = 1
-    btn.Font               = Enum.Font.Gotham
-    btn.TextSize           = 15
-    btn.TextColor3         = textCol
-    btn.Text               = weaponSkins[_G[flag]].text
-
-    btn.MouseButton1Click:Connect(function()
-        idx = idx + 1
-        if idx > #skinNames then idx = 1 end
-        _G[flag] = skinNames[idx]
-        btn.Text = weaponSkins[_G[flag]].text
-    end)
-end
-
 
 local function addBoneSelector(sec, y)
     local bones = {"Head","Torso","Left Arm","Right Arm","Left Leg","Right Leg"}
@@ -1059,11 +911,6 @@ local tabData = {
             addColorPicker(sec, "Fog Color", 68, "FogColor", Color3.new(1,1,1))
             addSlider(sec, "Fog Start", 50, 0, 1000, _G.FogStart or 0, "FogStart")
             addSlider(sec, "Fog End", 136, 100, 100000, _G.FogEnd or 100000, "FogEnd")
-        end}
-    },
-    [5] = { -- MISC
-        {title="SKINS", items=function(sec)
-            addWeaponSkinPicker(sec, "Skin Changer", 40, "SelectedWeaponSkin")
         end},
     },
 }
@@ -1097,10 +944,11 @@ top.InputBegan:Connect(function(i)
         i.Changed:Connect(function() if i.UserInputState == Enum.UserInputState.End then dragging = false end end)
     end
 end)
-
 game:GetService("UserInputService").InputChanged:Connect(function(i)
     if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = i.Position - dragStart
         main.Position = UDim2.new(origPos.X.Scale, origPos.X.Offset+delta.X, origPos.Y.Scale, origPos.Y.Offset+delta.Y)
     end
 end)
+
+print("Fatality.win Cheat Loaded | LEGIT, RAGE, ESP, Exploits | ChatGPT Merge 2025-07-06")
