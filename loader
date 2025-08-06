@@ -1,252 +1,595 @@
--- make sure y'all https://discord.gg/BkTebksHgr for the best scripts
-local void = if true then fireserver
-    (in MouseY, -3) playerposition
-    vector3.new(0, 10, 0)     -- repeat but with x 
---[[local void = if true then fireserver
-    (in MouseX, -3) playerposition
-    vector3.new(0, 0, 10)]]
-
--- then add ur hooks too silent aim 
--- Silent aim Yes this got 5x stars back then during the ancient days 
-if getgenv().Stars then return getgenv().Stars end
-
--- vars
-local Workspace = game.GetService(game, "Workspace")
-local Heartbeat = game.GetService(game, "RunService").Heartbeat
-local GuiService = game.GetService(game, "GuiService")
-local Players = game.GetService(game, "Players")
-local LocalPlayer = Players.LocalPlayer
-local CurrentCamera = game:GetService("Workspace").CurrentCamera
-local Mouse = LocalPlayer.GetMouse(LocalPlayer)
-
--- the silent aim vars / table 
-getgenv().Stars = {
-    SilentAimEnabled = true,
-    ShowFOV = true,
-    VisibleCheck = true,
-    TeamCheck = true,
-    HitPart = {"Head","LowerTorso","UpperTorso","HumanoidRootPart","LeftLowerArm","RightLowerArm","LeftUpperArm","RightUpperArm","LeftLowerLeg","LeftUpperLeg","RightLowerLeg","RightUpperLeg"},
-    FOV = 5.1,
-    HitChance = 100,
-    Selected = LocalPlayer,
-    BlacklistedTeams = {
-        {
-            Team = LocalPlayer.Team,
-            TeamColor = LocalPlayer.TeamColor,
-        },
+getgenv().tok.priv = {
+    ["Options"] = {
+        Key = "q", 
+        Notifications = true, 
+        gui = true, 
+        Print = false,
+        AutoLowGFX = true,
+        AntiCurve = true,
+        ClearConsole = true,
+        Intro = true,
     },
-    BlacklistedPlayers = {LocalPlayer},
-    WhitelistedPUIDs = {91318356},
+    ["Silent"] = {
+        Enabled = true, 
+        UseKeybind = false, 
+        Keybind = "f", 
+        Part = "HumanoidRootPart",
+        Prediction = 0.13181, 
+        HitChance = 100, 
+        ClosestPart = true, 
+        CLosestPoint = false, 
+        AntiGroundShots = true 
+    },
+    ["Panic"] = { 
+        Enabled = true, 
+        Keybind = "p" 
+    },
+    ["Checks"] = {
+        Death = true, 
+        Knocked = true, 
+        FriendCheck = false,
+    },
+    ["FOV"] = {
+        Visible = true,
+        Radius = 50, 
+        Transparency = 1, 
+        Color = Color3.new(255,255,255) 
+    },
+    ["Resolver"] = {
+        Enabled = true, 
+        AntiAimViewer = true
+    },
+    ["Macro"] = {
+        Enabled = true, 
+        Keybind = "c", 
+        Mode = "FirstPerson" 
+    },
+    ["HighLight"] = {
+        HighlightCham = true,
+
+    },
+    ["InventorySorter"] = {
+        Enabled = true, 
+        Keybind = "j", 
+        List = {"[Double-Barrel SG]","[Revolver]","[TacticalShotgun]", "[Shotgun]", "[SMG]"}, -- up to 9
+    },
+    ["Chat"] = {
+        Enabled = true,
+        FOV = ".fov", 
+        Prediction = ".pred", 
+        HitChance = ".hitchance", 
+    },
+    ["AVUS"] = {
+        Enabled = true, 
+    },
+    ["AutoPred"] = {
+        Enabled = true, -- // If you want to use auto prediction
+        Interval = 0.2, -- // How fast the auto prediction refreshes
+        P10 = 0.11,
+        P20 = 0.12588,
+        P30 = 0.11911,
+        P40 = 0.1256,
+        P50 = 0.13244671,
+        P60 = 0.136,
+        P70 = 0.12951,
+        P80 = 0.1321042,
+        P90 = 0.1421951,
+        P100 = 0.15738,
+        P110 = 0.1652131,
+        P120 = 0.1652131,
+        P130 = 0.156692,
+        P140 = 0.1223333,
+        P150 = 0.1514,
+        P160 = 0.1663,
+        P170 = 0.1672,
+        P180 = 0.1848,
+        P190 = 0.1865,
+        P200 = 0.166547,
+    },
+    ["Esp"] = {
+        Enabled = true, -- Loads the ESP
+        Bounding_Box = true, -- Box Base
+        Fill_Box = false, -- If you want to fill the box
+        Fill_Transparency = 0.75, -- Box transparency
+        Show_Distance = false, -- Shows the players distance
+        Show_Name = true, -- Shows the players name
+        Show_Health = true, -- Shows the players health
+        Health_Type = "Bar" -- Text, Both
+    },
+    ["Flick"]  = {
+        Toogle = true,
+        RotationSpeed = 2500,
+        Keybind = Enum.KeyCode.Q,
+    }
 }
 
---  FOV
-local circle = Drawing.new("Circle")
-function Stars.updateCircle()
-    if (circle) then
-        -- Circe 
-        circle.Transparency = 1
-        circle.Visible = Stars["ShowFOV"]
-        circle.Thickness = 2
-        circle.Color = Color3.fromRGB(0, 0, 0)
-        circle.NumSides = 12
-        circle.Radius = (Stars["FOV"] * 6) / 2
-        circle.Filled = false
-        circle.Position = Vector2.new(Mouse.X, Mouse.Y + (GuiService.GetGuiInset(GuiService).Y))
-
-        -- Return circle
-        return circle
-    end
+if getgenv().CheckIfScriptLoaded == true then
+    game.StarterGui:SetCore("SendNotification", {
+    Title = "tok.priv|",
+    Text = "New Sets Loaded! | tok.priv ",
+    Duration = 5,
+    })
+    return
 end
 
---  Custom Functions
-setreadonly(math, false); math.chance = function(percentage) local percentage = math.floor(percentage); local chance = math.floor(Random.new().NextNumber(Random.new(), 0, 1) * 100)/100; return chance <= percentage/100 end; setreadonly(math, true);
-setreadonly(table, false); table.loopforeach = function(tbl, func) for index, value in pairs(tbl) do if type(value) == 'table' then table.loopforeach(value, func); elseif type(value) == 'function' then table.loopforeach(debug.getupvalues(value)); else func(index, value); end; end; end; setreadonly(table, true);
+getgenv().CheckIfScriptLoaded = true
 
---  Customisable Checking Functions: Is a part visible
-function Stars.isPartVisible(Part, PartDescendant)
-    --  Vars
-    local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded.Wait(LocalPlayer.CharacterAdded)
-    local Origin = CurrentCamera.CFrame.Position
-    local _, OnScreen = CurrentCamera.WorldToViewportPoint(CurrentCamera, Part.Position)
-
-    --  If Part is on the screen
-    if (OnScreen) then
-        -- Vars: Calculating if is visible
-        local newRay = Ray.new(Origin, Part.Position - Origin)
-        local PartHit, _ = Workspace.FindPartOnRayWithIgnoreList(Workspace, newRay, {Character, CurrentCamera})
-        local Visible = (not PartHit or PartHit.IsDescendantOf(PartHit, PartDescendant))
-
-        --  Return
-        return Visible
-    end
-
-    --  Return
-    return false
+if tok.priv.Options.Print == true then
+    print("[tok.priv]: is loading..")
+    wait(3)
+    print("[tok.priv]: have successfully bypassed Anti Cheat..")
+    wait(2)
+    print("[tok.priv]: Loading Functions..")
+    wait(3.5)
+    print(" [tok.priv]: Has been successfully loaded, Enjoy your gameplay.")
 end
 
---  Check teams
-function Stars.checkTeam(targetPlayerA, targetPlayerB)
-    --  If player is not on your team
-    if (targetPlayerA.Team ~= targetPlayerB.Team) then
+local Players, Client, Mouse, RS, Camera =
+    game:GetService("Players"),
+    game:GetService("Players").LocalPlayer,
+    game:GetService("Players").LocalPlayer:GetMouse(),
+    game:GetService("RunService"),
+    game.Workspace.CurrentCamera
 
-        --  Check if team is blacklisted
-        for i = 1, #Stars.BlacklistedTeams do
-            local v = Stars.BlacklistedTeams
+    local Circle = Drawing.new("Circle")
+Circle.Transparency = tok.priv.FOV.Transparency
+Circle.Color = tok.priv.FOV.Color
+Circle.Thickness = 1
 
-            if (targetPlayerA.Team ~= v.Team and targetPlayerA.TeamColor ~= v.TeamColor) then
-                return true
+local UpdateFOV = function ()
+    if (not Circle) then
+        return Circle
+    end
+
+    Circle.Visible = tok.priv.FOV["Visible"]
+    Circle.Radius = tok.priv.FOV["Radius"] * 3
+    Circle.Color = tok.priv.FOV.Color
+    Circle.Transparency = tok.priv.FOV.Transparency
+    Circle.Position = Vector2.new(Mouse.X, Mouse.Y + (game:GetService("GuiService"):GetGuiInset().Y))
+    return Circle
+end
+
+RS.Heartbeat:Connect(UpdateFOV)
+
+ClosestPlrFromMouse = function()
+    local Target, Closest = nil, 1/0
+ 
+    for _ ,v in pairs(Players:GetPlayers()) do
+        if (v.Character and v ~= Client and v.Character:FindFirstChild("HumanoidRootPart")) then
+            local Position, OnScreen = Camera:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
+            local Distance = (Vector2.new(Position.X, Position.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+
+            if (Circle.Radius > Distance and Distance < Closest and OnScreen) then
+                Closest = Distance
+                Target = v
             end
         end
     end
-
-    --  Return
-    return false
+    return Target
 end
 
---  Check if player is blacklisted
-function Stars.checkPlayer(targetPlayer)
-    for i = 1, #Stars.BlacklistedPlayers do
-        local v = Stars.BlacklistedPlayers[i]
+if getgenv().tok.priv.Options.Intro then
+    local Tracer = Drawing.new("Image")
+    local Blur = Instance.new("BlurEffect")
+    local screenSize = Services.Workspace.CurrentCamera.ViewportSize
+    local centerPosition = Vector2.new(screenSize.X / 2, screenSize.Y / 2)
+    Tracer.Position = centerPosition
+    Tracer.Size = Vector2.new(0, 0)
+    Tracer.Visible = true
+    Tracer.Data = game:HttpGet("https://i.imgur.com/rkMgDJG.png")
+    Blur.Size = 0
+    Blur.Parent = Services.Workspace.CurrentCamera
+    for i = 1, 100 do
+        Tracer.Size = Tracer.Size + (Vector2.new(540, 540) - Tracer.Size) / 20
+        Tracer.Position = centerPosition - Tracer.Size / 2
+        if Blur.Size ~= 10 then
+            Blur.Size = Blur.Size + 1
+        end
+        task.wait()
+    end
+    Tracer.Size = Vector2.new(540, 540)
+    Tracer.Position = centerPosition - Tracer.Size / 2
+    wait(0.75)
+    for i = 1, 85 do
+        if Tracer.Transparency ~= 0 then
+            Tracer.Transparency = Tracer.Transparency - 0.01
+        end
+        if Blur.Size ~= 0 then
+            Blur.Size = Blur.Size - 1
+        end
+        task.wait()
+    end
+    Tracer.Size = Vector2.new(0, 0)
+    Blur:Destroy()
+end
 
-        if (v ~= targetPlayer) then
-            return true
+wait(0.5)
+
+local WTS = function (Object)
+    local ObjectVector = Camera:WorldToScreenPoint(Object.Position)
+    return Vector2.new(ObjectVector.X, ObjectVector.Y)
+end
+ 
+local IsOnScreen = function (Object)
+    local IsOnScreen = Camera:WorldToScreenPoint(Object.Position)
+    return IsOnScreen
+end
+ 
+local FilterObjs = function (Object)
+    if string.find(Object.Name, "Gun") then
+        return
+    end
+    if table.find({"Part", "MeshPart", "BasePart"}, Object.ClassName) then
+        return true
+    end
+end
+
+if tok.priv.Options.AutoLowGFX then
+    for _,v in pairs(workspace:GetDescendants()) do
+    if v.ClassName == "Part"
+    or v.ClassName == "SpawnLocation"
+    or v.ClassName == "WedgePart"
+    or v.ClassName == "Terrain"
+    or v.ClassName == "MeshPart" then
+    v.Material = "Plastic"
+    end
+    end
+end
+
+function IsPartVisible(Part, PartDescendant)
+    local Character = LocalPlayer.Character or CharacterAddedWait(CharacterAdded)
+    local Origin = CurrentCamera.CFrame.Position
+    local _, OnScreen = WorldToViewportPoint(CurrentCamera, Part.Position)
+
+    if (OnScreen) then
+        local raycastParams = RaycastParamsnew()
+        raycastParams.FilterType = EnumRaycastFilterTypeBlacklist
+        raycastParams.FilterDescendantsInstances = {Character, CurrentCamera}
+
+        local Result = Raycast(Workspace, Origin, Part.Position - Origin, raycastParams)
+
+        if (Result) then
+            local PartHit = Result.Instance
+            local Visible = (not PartHit or IsDescendantOf(PartHit, PartDescendant))
+
+            return Visible
         end
     end
 
-    --  Return
     return false
 end
 
---  Check if player is whitelisted
-function Stars.checkWhitelisted(targetPlayer)
-    for i = 1, #Stars.WhitelistedPUIDs do
-        local v = Stars.WhitelistedPUIDs[i]
-
-        if (targetPlayer.UserId == v) then
-            return true
-        end
-    end
-
-    --  Return
-    return false
-end
-
---  Get the Direction, Normal and Material
-function Stars.findDirectionNormalMaterial(Origin, Destination, UnitMultiplier)
-    if (typeof(Origin) == "Vector3" and typeof(Destination) == "Vector3") then
-        --  Handling
-        if (not UnitMultiplier) then UnitMultiplier = 1 end
-
-        --  Vars
-        local Direction = (Destination - Origin).Unit * UnitMultiplier
-        local RaycastResult = Workspace.Raycast(Workspace, Origin, Direction)
-
-        if (RaycastResult ~= nil) then
-            local Normal = RaycastResult.Normal
-            local Material = RaycastResult.Material
-
-            return Direction, Normal, Material
-        end
-    end
-
-    --  Return
-    return nil
-end
-
---  Check if silent aim can used
-function Stars.checkSilentAim()
-    return (rawget(Stars, "SilentAimEnabled") == true and rawget(Stars, "Selected") ~= LocalPlayer)
-end
-
---  Silent Aim Function
-function Stars.getClosestPlayerToCursor()
-    --  Vars
-    local ClosestPlayer = nil
-    local Chance = math.chance(Stars["HitChance"])
-    local ShortestDistance = 1/0
-
-    --  Chance
-    if (not Chance) then 
-        Stars["Selected"] = (Chance and LocalPlayer or LocalPlayer)
-        
-        return (Chance and LocalPlayer or LocalPlayer)
-    end Loop through all players            -- theres a Error right here and i wont be fixing it
-    local AllPlayers = Players.GetPlayers(Players)
-    for i = 1, #AllPlayers do
-        local plr = AllPlayers[i]
-
-        if (not Stars.checkWhitelisted(plr) and Stars.checkPlayer(plr) and plr.Character and plr.Character.PrimaryPart and plr.Character.FindFirstChildWhichIsA(plr.Character, "Humanoid") and plr.Character.FindFirstChildWhichIsA(plr.Character, "Humanoid").Health > 0) then
-            --  Team Check
-            if (Stars["TeamCheck"] and not Stars.checkTeam(plr, LocalPlayer)) then break end
-
-            --  Vars
-            local PartPos, OnScreen = CurrentCamera.WorldToViewportPoint(CurrentCamera, plr.Character.PrimaryPart.Position)
-            local Magnitude = (Vector2.new(PartPos.X, PartPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-
-            -- Check if is in FOV
-            if (Magnitude < (Stars["FOV"] * 6 - 8)) and (Magnitude < ShortestDistance) then
-                --  Check if Visible
-                if (Stars["VisibleCheck"] and Stars.isPartVisible(plr.Character.PrimaryPart, plr.Character)) or (not Stars["VisibleCheck"]) then
-                    ClosestPlayer = plr
-                    ShortestDistance = Magnitude
+local GetClosestBodyPart = function (character)
+    local ClosestDistance = 1/0
+    local BodyPart = nil
+    if (character and character:GetChildren()) then
+        for _,  x in next, character:GetChildren() do
+            if FilterObjs(x) and IsOnScreen(x) then
+                local Distance = (WTS(x) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+                if (Circle.Radius > Distance and Distance < ClosestDistance) then
+                    ClosestDistance = Distance
+                    BodyPart = x
                 end
             end
         end
     end
-
-    --  End
-    Stars["Selected"] = (Chance and ClosestPlayer or LocalPlayer)
-    return (Chance and ClosestPlayer or LocalPlayer)
+    return BodyPart
 end
 
---  Heartbeat ng
-local HBFuncs = function()
-    Stars.updateCircle()
-    Stars.getClosestPlayerToCursor()
+
+function GetclosestPointOnPart(Part)
+    local Lootenskid
+    local cf = Part.CFrame
+    local ps = Part.Size
+    local Transform = cf:PointToObjectSpace(Mouse.Hit.Position)
+	local Half = ps * 0.5
+	NearestPos = cf * Vector3.new(
+	math.clamp(Transform.x, - Half.x, Half.x), math.clamp(Transform.y, - Half.y, Half.y), math.clamp(Transform.z, - Half.z, Half.z))
+	return Lootenskid
 end
-Heartbeat.Connect(Heartbeat, HBFuncs)
-
-return Stars
-
---[[
-Examples:
-
---// Namecall Version // --
-local mt = getrawmetatable(game)
-local backupindex = mt.__index
-local Stars = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AnilisDev/DH-Silent-Aim/main/Namecall%20Version.lua"))()
-Stars["TeamCheck"] = false
-setreadonly(mt, false)
-
-mt.__namecall = newcclosure(function(...)
-    local args = {...}
-    local method = getnamecallmethod()
-    if method == "FireServer" then
-        if tostring(args[1]) == "RemoteNameHere" then
-            -- change args
-            return backupnamecall(unpack(args))
-        end
-    end
-    return backupnamecall(...)
-end)
-setreadonly(mt, true)
-
--- // Index Version // --
-local mt = getrawmetatable(game)
-local backupindex = mt.__index
-local Stars = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/AnilisDev/DH-Silent-Aim/main/Index%20Version.lua"))()
-Stars["TeamCheck"] = false
-setreadonly(mt, false)
-
-mt.__index = newcclosure(function(t, k)
-    if t:IsA("Mouse") and (k == "Hit" or k == "Target") then
-        if Stars.checkSilentAim() then
-            local CPlayer = rawget(Stars, "Selected")
-            if CPlayer and CPlayer.Character and CPlayer.Character.FindFirstChild(CPlayer.Character, "Head") then
-                return (k == "Hit" and CPlayer.Character.Head.CFrame or CPlayer.Character.Head)
+task.spawn(function ()
+    while task.wait() do
+        if Prey then
+            if tok.priv.Silent.Enabled and tok.priv.Silent.CLosestPoint == true then
+                PartToUse = tostring(GetclosestPointOnPart(Prey.Character))
             end
+        end 
+    end
+end)
+
+if getgenv().Rise.Checks.Death == true and Plr and Plr.Character:FindFirstChild("Humanoid") then
+    if Plr.Character.Humanoid.health < 2 then
+        Plr = nil
+        IsTargetting = false
+    end
+end
+if getgenv().tok.priv.Checks.Death == true and Plr and Plr.Character:FindFirstChild("Humanoid") then
+    if Client.Character.Humanoid.health < 2 then
+        Plr = nil
+        IsTargetting = false
+    end
+end
+if getgenv().tok.priv.Checks.Knocked == true and Prey and Prey.Character then 
+    local KOd = Prey.Character:WaitForChild("BodyEffects")["K.O"].Value
+    local Grabbed = Prey.Character:FindFirstChild("GRABBING_CONSTRAINT") ~= nil
+    if KOd or Grabbed then
+        Prey = nil
+    end
+end
+if getgenv().tok.priv.Checks.Knocked == true and Plr and Plr.Character then 
+    local KOd = Plr.Character:WaitForChild("BodyEffects")["K.O"].Value
+    local Grabbed = Plr.Character:FindFirstChild("GRABBING_CONSTRAINT") ~= nil
+    if KOd or Grabbed then
+        Plr = nil
+        IsTargetting = false
+    end
+end
+
+if tok.priv.Panic.Enabled then
+    Mouse.KeyDown:Connect(function(key)
+        if key == tok.priv.Panic.Keybind then
+            local cheats = {
+                b_b = false;
+                b_f = false;
+                b_f_t = false;
+                b_sd = false;
+                b_sn = false;
+                b_sh = false;
+                b_ht = false;
+                b_rt = true;
+                b_tc = true;
+            }
+            getgenv().tok.priv.Silent.UseKeybind = false
+            getgenv().tok.priv.Silent.Enabled = false
+            getgenv().tok.priv.AimAssist.Smoothness = 0.0000000001
+            getgenv().tok.priv.AimAssist.Shake = false
+            getgenv().tok.priv.Options.Notifications = false
+        end
+    end)
+end
+
+if tok.priv.Macro.Enabled then
+    if tok.priv.Macro.Mode == "ThirdPerson" then
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/k4alt/lel/main/scripts/fp_macro.lua"))()
+    elseif tok.priv.Macro.Mode == "FirstPerson" then -- yeah i skidded feds go cry
+        getgenv().macrokey = tok.priv.Macro.Keybind
+        getgenv().macrospeed = 0.85 -- the lower fps u have the higher u put this
+        getgenv().macrotype = "normal" -- normal or mouse
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/FederalW/scripts/main/macro"))()
+    end
+end
+
+local grmt = getrawmetatable(game)
+local backupindex = grmt.__index
+setreadonly(grmt, false)
+
+grmt.__index = newcclosure(function(self, v)
+    if (tok.priv.Silent.Enabled and Mouse and tostring(v) == "Hit") then
+
+        Prey = ClosestPlrFromMouse()
+
+        if Prey then
+            local endpoint = game.Players[tostring(Prey)].Character[tok.priv.Silent["Part"]].CFrame + (
+                game.Players[tostring(Prey)].Character[tok.priv.Silent["Part"]].Velocity * tok.priv.Silent.Prediction
+            )
+            return (tostring(v) == "Hit" and endpoint)
         end
     end
-    return backupindex(t, k)
+    return backupindex(self, v)
 end)
-setreadonly(mt, true)
+
+if tok.priv.Silent.hitchance and tok.priv.Silent.Enabled and target then
+    local function CalculateHitchance()
+        local targetPosition = game.Workspace:FindFirstChild(silentaim.Silent.Part).Position
+        local aimingPosition = Vector3.new(0, 0, 0)
+        local distance = (targetPosition - aimingPosition).Magnitude
+        local maxDistance = 10
+        local baseHitchance = 100 - (distance / maxDistance) * 10
+        baseHitchance = math.clamp(baseHitchance, 0, 100)
+        local hitchance = baseHitchance * (silentaim.Silent.HitChance / 100)
+        return hitchance
+    end
+    
+    local hitchance = CalculateHitchance()
+end
+
+if tok.priv.Resolver.Enabled and smd and tok.priv.Silent.Enabled then
+    game:GetService("RunService").Stepped:Connect(function()
+        if smd and tok.priv.Silent.Resolver == true then 
+            local character = smd.Character.HumanoidRootPart
+            local lastPosition = character.Position
+            wait()
+            local currentPosition = character.Position
+            local velocity = (currentPosition - lastPosition) * 44
+            lastPosition = currentPosition
+            
+            character.Velocity = velocity
+        end
+    end)
+end
+
+
+if tok.priv.Silent.AntiGroundShot and 
+SilentTarget ~= nil and
+SilentTarget and 
+SilentTarget.Character:FindFirstChild("Humanoid") and 
+SilentTarget.Character:FindFirstChild("Humanoid") == Enum.HumanoidStateType.Freefall then
+    pcall(function()
+        local TargetVelv5 = SilentTarget.Character[tok.priv.SilentAim.TargetBone and tok.priv.SilentAim.TargetBone]
+        TargetVelv5.Velocity = Vector3.new(TargetVelv5.Velocity.X, (TargetVelv5.Velocity.Y * 0.2), TargetVelv5.Velocity.Z)
+        TargetVelv5.AssemblyLinearVelocity = Vector3.new(TargetVelv5.Velocity.X, (TargetVelv5.Velocity.Y * 0.2), TargetVelv5.Velocity.Z)
+    end)
+end
+
+local function TargetForceField(a, Setting)
+    if Setting.ForceField then
+        if not (a:FindFirstChildOfClass("ForceField")) then
+            return true
+        else
+            return false
+        end
+    else
+        return true
+    end
+end
+
+if tok.priv.InventorySorter.Enabled == true then 
+    local services = {
+       ["Players"] = game:GetService("Players"),
+       ["RunService"] = game:GetService("RunService"),
+    }
+    
+    local variables = {
+       ["LocalPlayer"] = services["Players"].LocalPlayer,
+       ["RenderStepped"] = services["RunService"].RenderStepped,
+    }
+    
+    local function get_instance(from,name)
+       if from ~= nil and name ~= nil then
+           local inst = from:FindFirstChildOfClass(name)
+           if not inst then
+               inst = from:FindFirstChild(name)
+           end
+           if inst then
+               return inst
+           end
+       end
+    end
+    local function update()
+       variables["RenderStepped"]:wait()
+       local temp = {}
+       for i=1,#variables["LocalPlayer"].Backpack:GetChildren() do
+           local tool = get_instance(variables["LocalPlayer"].Backpack,"Tool")
+           if tool then
+               table.insert(temp,tool)
+               tool.Parent = game
+           end
+       end
+       for x=1,#tok.priv.InventorySorter.List do
+           for i=1,#temp do
+               if string.sub(string.lower(tostring(temp[i])),1,string.len(string.lower(tok.priv.InventorySorter.List[x]))) == string.lower(tok.priv.InventorySorter.List[x]) then
+                   temp[i].Parent = variables["LocalPlayer"].Backpack
+                   wait(0.105)
+               end
+           end
+       end
+       for i=1,#temp do
+           temp[i].Parent = variables["LocalPlayer"].Backpack
+           wait(0)
+       end
+    end
+    Mouse.KeyDown:Connect(function(key)
+        if key == tok.priv.InventorySorter.Keybind and tok.priv.InventorySorter.Enabled then
+            update()
+        end
+    end)
+    end
+
+    local RunService = game:GetService("RunService")
+
+    local function zeroOutYVelocity(hrp)
+        hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
+        hrp.AssemblyLinearVelocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
+    end
+    
+    local function onPlayerAdded(player)
+        player.CharacterAdded:Connect(function(character)
+            local hrp = character:WaitForChild("HumanoidRootPart")
+            zeroOutYVelocity(hrp)
+        end)
+    end
+    
+    local function onPlayerRemoving(player)
+        player.CharacterAdded:Disconnect()
+    end
+    
+    game.Players.PlayerAdded:Connect(onPlayerAdded)
+    game.Players.PlayerRemoving:Connect(onPlayerRemoving)
+    
+    RunService.Heartbeat:Connect(function()
+        pcall(function()
+            for i, player in pairs(game.Players:GetChildren()) do
+                if player.Name ~= game.Players.LocalPlayer.Name then
+                    local hrp = player.Character.HumanoidRootPart
+                    zeroOutYVelocity(hrp)
+                end
+            end
+        end)
+    end)
+    
+    local custom_theme = {} --soon
+    
+    local function CreateInstance(cls,props)
+    local inst = Instance.new(cls)
+    for i,v in pairs(props) do
+        inst[i] = v
+    end
+    return inst
+    end
+    
+    local __namecall
+__namecall = hookmetamethod(game, '__namecall', function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+
+    if tostring(self.Name) == 'MainEvent' and tostring(method) == 'FireServer' then
+        if table.find({'TeleportDetect', 'CHECKER_1', 'CHECKER', 'GUI_CHECK', 'OneMoreTime', 'checkingSPEED', 'BANREMOTE', 'KICKREMOTE', 'BR_KICKPC', 'BR_KICKMOBILE'}, args[1]) then
+            return
+        end
+    end
+end)
+
+
+while tok.priv.AutoPred.Enabled == true do
+    local ping = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString()
+    local pingValue = string.split(ping, " ")[1]
+    local pingNumber = tonumber(pingValue)
+    if pingNumber < 10 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P10
+    elseif pingNumber < 20 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P20
+    elseif pingNumber < 30 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P30
+    elseif pingNumber < 40 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P40
+    elseif pingNumber < 50 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P50
+    elseif pingNumber < 60 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P60
+    elseif pingNumber < 70 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P70
+    elseif pingNumber < 80 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P80
+    elseif pingNumber < 90 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P90
+    elseif pingNumber < 100 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P100
+    elseif pingNumber < 110 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P110
+    elseif pingNumber < 120 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P120
+    elseif pingNumber < 130 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P130
+    elseif pingNumber < 140 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P140
+    elseif pingNumber < 150 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P150
+    elseif pingNumber < 160 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P160
+    elseif pingNumber < 170 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P170
+    elseif pingNumber < 180 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P180
+    elseif pingNumber < 190 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P190
+    elseif pingNumber < 200 then
+        getgenv().tok.priv.Silent.Prediction = tok.priv.AutoPred.P200
+    elseif pingNumber < 210 then
+        getgenv().tok.priv.Silent.Prediction = 0.16942
+    elseif pingNumber < 260 then
+        getgenv().tok.priv.Silent.Prediction = 0.1651
+    elseif pingNumber < 310 then
+        getgenv().tok.priv.Silent.Prediction = 0.16780
+    end
+    wait(tok.priv.AutoPred.Interval)
+end
